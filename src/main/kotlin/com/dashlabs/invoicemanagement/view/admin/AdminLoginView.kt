@@ -6,9 +6,9 @@ import com.dashlabs.invoicemanagement.view.dashboard.DashboardView
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import io.reactivex.schedulers.Schedulers
 import javafx.geometry.Orientation
+import javafx.scene.layout.Priority
 import javafx.stage.Modality
 import javafx.stage.StageStyle
-import javafx.util.Duration
 import tornadofx.*
 
 class AdminLoginView : View("Admin Login!") {
@@ -30,6 +30,10 @@ class AdminLoginView : View("Admin Login!") {
 
             hbox {
                 button("Login!") {
+                    hboxConstraints {
+                        marginRight = 20.0
+                        hGrow = Priority.ALWAYS
+                    }
                     action {
                         adminModel.loginUser()
                                 .subscribeOn(Schedulers.io())
@@ -47,6 +51,10 @@ class AdminLoginView : View("Admin Login!") {
                 }
 
                 button("Register Admin") {
+                    hboxConstraints {
+                        marginRight = 20.0
+                        hGrow = Priority.ALWAYS
+                    }
                     action {
                         adminModel.registerUser()
                                 .subscribeOn(Schedulers.io())
