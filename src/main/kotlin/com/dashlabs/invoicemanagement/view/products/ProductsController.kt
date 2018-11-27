@@ -35,6 +35,11 @@ class ProductsController : Controller() {
                 .observeOn(JavaFxScheduler.platform())
                 .subscribe { t1, t2 ->
                     t1?.let {
+                        it.isNotEmpty().let {
+                            if (it) {
+                                username.value = ""
+                            }
+                        }
                         productsListObserver.set(FXCollections.observableArrayList<ProductsTable>(it))
                     }
                 }
@@ -58,7 +63,9 @@ class ProductsController : Controller() {
                 .observeOn(JavaFxScheduler.platform())
                 .subscribe { t1, t2 ->
                     t1?.let {
-                        productsListObserver.add(0, it)
+                        productName.value = ""
+                        sectionName.value = ""
+                        productsListObserver.add(it)
                     }
                 }
     }
