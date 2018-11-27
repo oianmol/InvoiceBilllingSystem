@@ -99,8 +99,12 @@ object Database {
 
     }
 
-    fun listProducts(): MutableList<ProductsTable>? {
-        return productsDao?.queryForAll()
+    fun listProducts(search: String? = null): List<ProductsTable>? {
+        search?.let {
+            return productsDao?.queryBuilder()?.where()?.like(ProductsTable::productName.name, search)?.query()
+        } ?: kotlin.run {
+            return productsDao?.queryForAll()
+        }
     }
 
 }

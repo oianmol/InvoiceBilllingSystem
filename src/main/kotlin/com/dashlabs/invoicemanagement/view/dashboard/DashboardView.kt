@@ -64,6 +64,30 @@ class DashboardView : View("Dashboard") {
             enableWhen(dashboardController.adminLogin)
             tab(tabNames[0]) {
                 vbox {
+                    hbox {
+                        alignment = Pos.TOP_RIGHT
+                        button("Add Product") {
+                            HBox.setMargin(this, Insets(10.0))
+                            hboxConstraints {
+                                marginRight = 20.0
+                                hGrow = Priority.ALWAYS
+                            }
+                            setOnMouseClicked {
+
+                            }
+                        }
+
+                        button("Search Product") {
+                            HBox.setMargin(this, Insets(10.0))
+                            hboxConstraints {
+                                marginRight = 20.0
+                                hGrow = Priority.ALWAYS
+                            }
+                            setOnMouseClicked {
+                                productsController.searchFor("somename")
+                            }
+                        }
+                    }
                     tableview<ProductsTable>(productsController.productsListObserver) {
                         column("ID", ProductsTable::productId)
                         column("Product Name", ProductsTable::productName)
@@ -84,4 +108,5 @@ class DashboardView : View("Dashboard") {
     private fun isAdminLoggedIn(): Boolean {
         return (app as InvoiceApp).admin != null
     }
+
 }
