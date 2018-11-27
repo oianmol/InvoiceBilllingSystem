@@ -16,7 +16,7 @@ class AdminLoginView : View("Admin Login!") {
         fieldset(title, labelPosition = Orientation.VERTICAL) {
             field("Admin Username") {
                 textfield(adminModel.username).validator {
-                    if (it.isNullOrBlank()) error("The username field is required") else null
+                    if (it.isNullOrBlank()) error("The productName field is required") else null
                 }
             }
             field("Admin Password") {

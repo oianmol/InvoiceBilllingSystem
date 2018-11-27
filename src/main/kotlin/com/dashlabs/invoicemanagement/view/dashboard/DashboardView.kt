@@ -4,6 +4,7 @@ import com.dashlabs.invoicemanagement.app.InvoiceApp
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
 import com.dashlabs.invoicemanagement.view.admin.AdminLoginView
 import com.dashlabs.invoicemanagement.view.customers.CustomersView
+import com.dashlabs.invoicemanagement.view.products.ProductViewModel
 import com.dashlabs.invoicemanagement.view.products.ProductsController
 import javafx.geometry.Insets
 import javafx.geometry.Pos
@@ -16,7 +17,7 @@ class DashboardView : View("Dashboard") {
 
     private val dashboardController: DashboardController by inject()
     private val productsController: ProductsController by inject()
-
+    private val productViewModel = ProductViewModel()
     private var tabNames: ArrayList<String> = arrayListOf("Products", "Customers", "Invoices")
 
     init {
@@ -65,28 +66,56 @@ class DashboardView : View("Dashboard") {
             tab(tabNames[0]) {
                 vbox {
                     hbox {
-                        alignment = Pos.TOP_RIGHT
-                        button("Add Product") {
-                            HBox.setMargin(this, Insets(10.0))
-                            hboxConstraints {
-                                marginRight = 20.0
-                                hGrow = Priority.ALWAYS
-                            }
-                            setOnMouseClicked {
+                        vbox {
+                            form {
+                                fieldset {
+                                    field("Search Products") {
+                                        textfield(productViewModel.searchName).validator {
+                                            if (it.isNullOrBlank()) error("Please enter search Query!") else null
+                                        }
+                                    }
+                                }
 
+
+
+                                button("Search Product") {
+                                    alignment = Pos.BOTTOM_RIGHT
+                                    setOnMouseClicked {
+                                        productsController.searchProduct(productViewModel.searchName)
+                                    }
+                                }
                             }
+
                         }
 
-                        button("Search Product") {
-                            HBox.setMargin(this, Insets(10.0))
-                            hboxConstraints {
-                                marginRight = 20.0
-                                hGrow = Priority.ALWAYS
+                        vbox {
+                            form {
+                                fieldset {
+                                    field("Product Name") {
+                                        textfield(productViewModel.productName).validator {
+                                            if (it.isNullOrBlank()) error("Please enter product name!") else null
+                                        }
+                                    }
+
+                                    field("Section Name") {
+                                        textfield(productViewModel.sectionName).validator {
+                                            if (it.isNullOrBlank()) error("Please enter section name!") else null
+                                        }
+                                    }
+                                }
+
+
+
+                                button("Add Product") {
+                                    setOnMouseClicked {
+                                        productsController.addProduct(productViewModel.productName, productViewModel.sectionName)
+                                    }
+                                }
                             }
-                            setOnMouseClicked {
-                                productsController.searchFor("somename")
-                            }
+
                         }
+
+
                     }
                     tableview<ProductsTable>(productsController.productsListObserver) {
                         column("ID", ProductsTable::productId)
