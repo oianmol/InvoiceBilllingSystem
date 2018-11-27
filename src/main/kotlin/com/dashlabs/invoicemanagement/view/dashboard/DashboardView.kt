@@ -1,84 +1,87 @@
 package com.dashlabs.invoicemanagement.view.dashboard
 
 import com.dashlabs.invoicemanagement.app.InvoiceApp
+import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
 import com.dashlabs.invoicemanagement.view.admin.AdminLoginView
+import com.dashlabs.invoicemanagement.view.customers.CustomersView
+import com.dashlabs.invoicemanagement.view.products.ProductsController
 import javafx.geometry.Insets
 import javafx.geometry.Pos
+import javafx.scene.control.TabPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
-import javafx.stage.Modality
-import javafx.stage.StageStyle
 import tornadofx.*
 
-class DashboardView : View("Invoice Dashboard") {
+class DashboardView : View("Dashboard") {
 
     private val dashboardController: DashboardController by inject()
+    private val productsController: ProductsController by inject()
+
+    private var tabNames: ArrayList<String> = arrayListOf("Products", "Customers", "Invoices")
 
     init {
         subscribe<InvoiceApp.AdminLoggedInEvent> {
             dashboardController.adminLoggedin(it.admin)
+            productsController.requestForProducts()
             println("User logged in! ${it.admin.username}")
         }
     }
+
     override val root = vbox {
-        minHeight = 300.0
-        minWidth = 500.0
-        alignment = Pos.CENTER
-        label("Dummy Trading Company\nRoad no.12 Banjara Hills\nHyderabad 500034") {
-            alignment = Pos.TOP_CENTER
-            paddingAll = 10.0
-        }
-
-        label(dashboardController.statusProperty) {
-            alignment = Pos.TOP_RIGHT
-            paddingAll = 10.0
-        }
-
+        minHeight = 400.0
+        minWidth = 600.0
         hbox {
-            alignment = Pos.CENTER
-            button(text = "Products") {
-                hboxConstraints {
-                    marginRight = 20.0
-                    hGrow = Priority.ALWAYS
-                }
-                setOnMouseClicked {
-
-                }
+            label("Company Name \nRoad no.12 Banjara Hills\nHyderabad 500034") {
+                alignment = Pos.TOP_LEFT
+                paddingAll = 10.0
+                HBox.setMargin(this, Insets(10.0))
             }
-
-            button(text = "Customers") {
-                hboxConstraints {
-                    marginRight = 20.0
-                    hGrow = Priority.ALWAYS
-                }
-                setOnMouseClicked {
-
-                }
+            label(dashboardController.statusProperty) {
+                alignment = Pos.TOP_RIGHT
+                paddingAll = 10.0
+                HBox.setMargin(this, Insets(10.0))
             }
 
             button(dashboardController.admingSettingsProperty) {
+                HBox.setMargin(this, Insets(10.0))
                 hboxConstraints {
                     marginRight = 20.0
                     hGrow = Priority.ALWAYS
                 }
                 setOnMouseClicked {
-                    (app as InvoiceApp).admin?.let {
+                    if (isAdminLoggedIn()) {
                         openInternalWindow(AdminSettingsView::class)
-                    }?:kotlin.run {
+                    } else {
                         openInternalWindow(AdminLoginView::class)
                     }
                 }
             }
+        }
 
-            button(text = "Invoices") {
-                hboxConstraints {
-                    marginRight = 20.0
-                    hGrow = Priority.ALWAYS
-                }
-                setOnMouseClicked {
 
+        tabpane {
+            tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
+            enableWhen(dashboardController.adminLogin)
+            tab(tabNames[0]) {
+                vbox {
+                    tableview<ProductsTable>(productsController.productsListObserver) {
+                        column("ID", ProductsTable::productId)
+                        column("Product Name", ProductsTable::productName)
+                        column("Section", ProductsTable::sectionName)
+                    }
                 }
             }
+
+            tab(tabNames[1]) {
+                this.add(CustomersView())
+            }
+
+            tab(tabNames[2]) {
+            }
         }
+    }
+
+    private fun isAdminLoggedIn(): Boolean {
+        return (app as InvoiceApp).admin != null
     }
 }

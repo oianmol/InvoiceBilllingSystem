@@ -2,13 +2,10 @@ package com.dashlabs.invoicemanagement.view.admin
 
 import com.dashlabs.invoicemanagement.app.InvoiceApp
 import com.dashlabs.invoicemanagement.databaseconnection.AdminTable
-import com.dashlabs.invoicemanagement.view.dashboard.DashboardView
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import io.reactivex.schedulers.Schedulers
 import javafx.geometry.Orientation
 import javafx.scene.layout.Priority
-import javafx.stage.Modality
-import javafx.stage.StageStyle
 import tornadofx.*
 
 class AdminLoginView : View("Admin Login!") {
@@ -77,8 +74,8 @@ class AdminLoginView : View("Admin Login!") {
     private fun onLoginDashboard(it: AdminTable) {
         val myApp = app as InvoiceApp
         myApp.setUser(it)
-        find<DashboardView> {
+        find<AdminLoginView> {
             this.close()
-        }.openWindow(stageStyle = StageStyle.DECORATED,modality = Modality.WINDOW_MODAL,escapeClosesWindow = false,owner = this@AdminLoginView.currentWindow,block = false,resizable = true)
+        }
     }
 }

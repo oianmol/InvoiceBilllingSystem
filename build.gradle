@@ -42,7 +42,7 @@ dependencies {
     compile 'org.xerial:sqlite-jdbc:3.21.0.1'
     implementation "io.reactivex.rxjava2:rxjava:2.2.3"
     compile 'io.reactivex.rxjava2:rxjavafx:2.2.2'
-
+    compile 'org.tensorflow:tensorflow:1.12.0'
     testCompile "org.junit.jupiter:junit-jupiter-api:$junit_version"
     testRuntime "org.junit.jupiter:junit-jupiter-engine:$junit_version"
 }

@@ -1,6 +1,7 @@
 package com.dashlabs.invoicemanagement.databaseconnection
 
 import com.dashlabs.invoicemanagement.view.admin.Admin
+import com.dashlabs.invoicemanagement.view.products.Product
 import com.j256.ormlite.dao.Dao
 import com.j256.ormlite.dao.DaoManager
 import com.j256.ormlite.jdbc.JdbcConnectionSource
@@ -14,14 +15,21 @@ object Database {
 
     private var accountDao: Dao<AdminTable, *>?
 
+    private var productsDao: Dao<ProductsTable, *>?
+
     init {
         connectionSource = getDatabaseConnection()
+
+        TableUtils.createTableIfNotExists(connectionSource, AdminTable::class.java)
+        TableUtils.createTableIfNotExists(connectionSource, ProductsTable::class.java)
+
         // instantiate the DAO to handle Account with String id
         accountDao = DaoManager.createDao(connectionSource, AdminTable::class.java)
+        productsDao = DaoManager.createDao(connectionSource, ProductsTable::class.java)
+
     }
 
     fun createAdmin(admin: Admin): AdminTable? {
-        TableUtils.createTableIfNotExists(connectionSource, AdminTable::class.java)
 
         // create an instance of Account
         val adminTable = AdminTable()
@@ -67,6 +75,32 @@ object Database {
         } ?: kotlin.run {
             return null
         }
+    }
+
+    fun createProduct(product: Product): ProductsTable? {
+        // create an instance of product
+        val productsTable = ProductsTable()
+        productsTable.productName = product.name
+        productsTable.sectionName = product.section
+
+        // persist the account object to the database
+        val id = productsDao?.create(productsTable)
+        connectionSource.close()
+
+        id?.let {
+            return if (it > 0) {
+                productsTable
+            } else {
+                null
+            }
+        } ?: kotlin.run {
+            return null
+        }
+
+    }
+
+    fun listProducts(): MutableList<ProductsTable>? {
+        return productsDao?.queryForAll()
     }
 
 }
