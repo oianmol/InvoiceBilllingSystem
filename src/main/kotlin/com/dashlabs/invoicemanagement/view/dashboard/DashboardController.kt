@@ -23,21 +23,6 @@ class DashboardController : Controller() {
         runLater { status = "Welcome ${admin.username} !" }
         runLater { admingSettings = "Admin Settings" }
         runLater { isAdminLogin = true }
-
-        for (index in 0..5) {
-            try {
-                createDummyProducts()
-            } catch (ex: Exception) {
-                ex.printStackTrace()
-            }
-        }
-    }
-
-    private fun createDummyProducts() {
-        val product = Product()
-        product.name = "somenames${System.currentTimeMillis()}"
-        product.section = "somesection${System.currentTimeMillis()}"
-        Database.createProduct(product)
     }
 
 }
