@@ -35,8 +35,8 @@ class DashboardController : Controller() {
 
     private fun createDummyProducts() {
         val product = Product()
-        product.name = "SomeName${System.currentTimeMillis()}"
-        product.section = "SomeSection${System.currentTimeMillis()}"
+        product.name = "somename${System.currentTimeMillis()}"
+        product.section = "somesection${System.currentTimeMillis()}"
         Database.createProduct(product)
     }
 
