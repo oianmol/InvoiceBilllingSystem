@@ -81,8 +81,9 @@ object Database {
         // create an instance of product
         val productsTable = ProductsTable()
         productsTable.productName = product.name
-        productsTable.sectionName = product.section
-
+        productsTable.dateCreated = System.currentTimeMillis()
+        productsTable.dateModified = System.currentTimeMillis()
+        productsTable.amount = product.amount.toDouble()
         // persist the account object to the database
         val id = productsDao?.create(productsTable)
         connectionSource.close()
@@ -103,7 +104,7 @@ object Database {
         return if (search.isEmpty()) {
             productsDao?.queryForAll()
         } else {
-            productsDao?.queryBuilder()?.where()?.like(ProductsTable::productName.name, search)?.or()?.like(ProductsTable::sectionName.name, search)?.query()
+            productsDao?.queryBuilder()?.where()?.like(ProductsTable::productName.name, search)?.query()
         }
     }
 

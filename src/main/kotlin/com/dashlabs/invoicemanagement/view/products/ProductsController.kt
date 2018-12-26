@@ -45,15 +45,15 @@ class ProductsController : Controller() {
                 }
     }
 
-    fun addProduct(productName: Property<String>, sectionName: Property<String>) {
+    fun addProduct(productName: Property<String>, amountName: Property<Number>) {
         Single.create<ProductsTable> {
             try {
-                if (productName.value.isNullOrEmpty() || sectionName.value.isNullOrEmpty()) {
+                if (productName.value.isNullOrEmpty() || amountName.value.toDouble() == 0.0) {
                     it.onError(Exception())
                 } else {
                     val product = Product()
                     product.name = productName.value
-                    product.section = sectionName.value
+                    product.amount = amountName.value.toDouble()
                     Database.createProduct(product)?.let { it1 -> it.onSuccess(it1) }
                 }
             } catch (ex: Exception) {
@@ -64,7 +64,7 @@ class ProductsController : Controller() {
                 .subscribe { t1, t2 ->
                     t1?.let {
                         productName.value = ""
-                        sectionName.value = ""
+                        amountName.value = 0.0
                         productsListObserver.add(it)
                     }
                 }
@@ -75,7 +75,7 @@ class ProductsController : Controller() {
 class ProductViewModel : ItemViewModel<Product>(Product()) {
 
     val productName = bind(Product::nameProperty)
-    val sectionName = bind(Product::sectionProperty)
+    val amountName = bind(Product::amountProperty)
     val searchName = bind(Product::searchProperty)
 
 }

@@ -97,9 +97,11 @@ class DashboardView : View("Dashboard") {
                                         }
                                     }
 
-                                    field("Section Name") {
-                                        textfield(productViewModel.sectionName).validator {
-                                            if (it.isNullOrBlank()) error("Please enter section name!") else null
+                                    field("Amount") {
+                                        textfield(productViewModel.amountName){
+                                            this.filterInput { it.controlNewText.isDouble() }
+                                        }.validator {
+                                            if (it.isNullOrBlank()) error("Please specify amount!") else null
                                         }
                                     }
                                 }
@@ -108,7 +110,7 @@ class DashboardView : View("Dashboard") {
 
                                 button("Add Product") {
                                     setOnMouseClicked {
-                                        productsController.addProduct(productViewModel.productName, productViewModel.sectionName)
+                                        productsController.addProduct(productViewModel.productName, productViewModel.amountName)
                                     }
                                 }
                             }
@@ -120,7 +122,7 @@ class DashboardView : View("Dashboard") {
                     tableview<ProductsTable>(productsController.productsListObserver) {
                         column("ID", ProductsTable::productId)
                         column("Product Name", ProductsTable::productName)
-                        column("Section", ProductsTable::sectionName)
+                        column("Amount", ProductsTable::amount)
                     }
                 }
             }

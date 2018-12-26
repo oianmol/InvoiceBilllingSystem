@@ -13,9 +13,15 @@ class ProductsTable {
     var productName: String = ""
 
     @DatabaseField(canBeNull = false)
-    var sectionName: String = ""
+    var dateCreated: Long = 0L
+
+    @DatabaseField(canBeNull = false)
+    var dateModified: Long = 0L
+
+    @DatabaseField(canBeNull = false)
+    var amount: Double = 0.0
 
     override fun toString(): String {
-        return "$productId $productName $sectionName"
+        return "$productId $productName $amount $dateCreated $dateModified"
     }
 }

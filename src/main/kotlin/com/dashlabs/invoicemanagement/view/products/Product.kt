@@ -9,8 +9,8 @@ class Product {
     var search by property<String>()
     fun searchProperty() = getProperty(Product::search)
 
-    var section by property<String>()
-    fun sectionProperty() = getProperty(Product::section)
+    var amount by property<Number>()
+    fun amountProperty() = getProperty(Product::amount)
 
     override fun toString() = name
 }
