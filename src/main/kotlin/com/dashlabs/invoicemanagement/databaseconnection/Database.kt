@@ -1,13 +1,13 @@
 package com.dashlabs.invoicemanagement.databaseconnection
 
 import com.dashlabs.invoicemanagement.view.admin.Admin
+import com.dashlabs.invoicemanagement.view.customers.Customer
 import com.dashlabs.invoicemanagement.view.products.Product
 import com.j256.ormlite.dao.Dao
 import com.j256.ormlite.dao.DaoManager
 import com.j256.ormlite.jdbc.JdbcConnectionSource
 import com.j256.ormlite.table.TableUtils
 import java.io.File
-
 
 object Database {
 
@@ -17,15 +17,19 @@ object Database {
 
     private var productsDao: Dao<ProductsTable, *>?
 
+    private var customerDao: Dao<CustomersTable, *>?
+
     init {
         connectionSource = getDatabaseConnection()
 
         TableUtils.createTableIfNotExists(connectionSource, AdminTable::class.java)
         TableUtils.createTableIfNotExists(connectionSource, ProductsTable::class.java)
+        TableUtils.createTableIfNotExists(connectionSource, CustomersTable::class.java)
 
         // instantiate the DAO to handle Account with String id
         accountDao = DaoManager.createDao(connectionSource, AdminTable::class.java)
         productsDao = DaoManager.createDao(connectionSource, ProductsTable::class.java)
+        customerDao = DaoManager.createDao(connectionSource, CustomersTable::class.java)
 
     }
 
@@ -100,11 +104,42 @@ object Database {
 
     }
 
+    fun createCustomer(customer: Customer): CustomersTable? {
+// create an instance of product
+        val customersTable = CustomersTable()
+        customersTable.customerName = customer.name
+        customersTable.dateCreated = System.currentTimeMillis()
+        customersTable.aadharCard = customer.aadhar.toString()
+        customersTable.dateModified = System.currentTimeMillis()
+        customersTable.balance = customer.balance.toDouble()
+        // persist the account object to the database
+        val id = customerDao?.create(customersTable)
+        connectionSource.close()
+
+        id?.let {
+            return if (it > 0) {
+                customersTable
+            } else {
+                null
+            }
+        } ?: kotlin.run {
+            return null
+        }
+    }
+
     fun listProducts(search: String = ""): List<ProductsTable>? {
         return if (search.isEmpty()) {
             productsDao?.queryForAll()
         } else {
             productsDao?.queryBuilder()?.where()?.like(ProductsTable::productName.name, search)?.query()
+        }
+    }
+
+    fun listCustomers(search: String = ""): List<CustomersTable>? {
+        return if (search.isEmpty()) {
+            customerDao?.queryForAll()
+        } else {
+            customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerName.name, search)?.query()
         }
     }
 

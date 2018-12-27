@@ -1,11 +1,9 @@
 package com.dashlabs.invoicemanagement.view.dashboard
 
 import com.dashlabs.invoicemanagement.app.InvoiceApp
-import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
 import com.dashlabs.invoicemanagement.view.admin.AdminLoginView
 import com.dashlabs.invoicemanagement.view.customers.CustomersView
-import com.dashlabs.invoicemanagement.view.products.ProductViewModel
-import com.dashlabs.invoicemanagement.view.products.ProductsController
+import com.dashlabs.invoicemanagement.view.products.ProductsView
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.TabPane
@@ -16,14 +14,15 @@ import tornadofx.*
 class DashboardView : View("Dashboard") {
 
     private val dashboardController: DashboardController by inject()
-    private val productsController: ProductsController by inject()
-    private val productViewModel = ProductViewModel()
     private var tabNames: ArrayList<String> = arrayListOf("Products", "Customers", "Invoices")
+    private var productsView: ProductsView = ProductsView()
+    private var customersView: CustomersView = CustomersView()
 
     init {
         subscribe<InvoiceApp.AdminLoggedInEvent> {
             dashboardController.adminLoggedin(it.admin)
-            productsController.requestForProducts()
+            productsView.requestForProducts()
+            customersView.requestForCustomers()
             println("User logged in! ${it.admin.username}")
         }
     }
@@ -64,71 +63,11 @@ class DashboardView : View("Dashboard") {
             tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
             enableWhen(dashboardController.adminLogin)
             tab(tabNames[0]) {
-                vbox {
-                    hbox {
-                        vbox {
-                            form {
-                                fieldset {
-                                    field("Search Products") {
-                                        textfield(productViewModel.searchName).validator {
-                                            if (it.isNullOrBlank()) error("Please enter search Query!") else null
-                                        }
-                                    }
-                                }
-
-
-
-                                button("Search Product") {
-                                    alignment = Pos.BOTTOM_RIGHT
-                                    setOnMouseClicked {
-                                        productsController.searchProduct(productViewModel.searchName)
-                                    }
-                                }
-                            }
-
-                        }
-
-                        vbox {
-                            form {
-                                fieldset {
-                                    field("Product Name") {
-                                        textfield(productViewModel.productName).validator {
-                                            if (it.isNullOrBlank()) error("Please enter product name!") else null
-                                        }
-                                    }
-
-                                    field("Amount") {
-                                        textfield(productViewModel.amountName){
-                                            this.filterInput { it.controlNewText.isDouble() }
-                                        }.validator {
-                                            if (it.isNullOrBlank()) error("Please specify amount!") else null
-                                        }
-                                    }
-                                }
-
-
-
-                                button("Add Product") {
-                                    setOnMouseClicked {
-                                        productsController.addProduct(productViewModel.productName, productViewModel.amountName)
-                                    }
-                                }
-                            }
-
-                        }
-
-
-                    }
-                    tableview<ProductsTable>(productsController.productsListObserver) {
-                        column("ID", ProductsTable::productId)
-                        column("Product Name", ProductsTable::productName)
-                        column("Amount", ProductsTable::amount)
-                    }
-                }
+                this.add(productsView)
             }
 
             tab(tabNames[1]) {
-                this.add(CustomersView())
+                this.add(customersView)
             }
 
             tab(tabNames[2]) {
