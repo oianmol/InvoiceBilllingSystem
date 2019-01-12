@@ -33,11 +33,7 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
                     }
                     setOnMouseClicked {
                         selectionModel?.selectedItems.let {
-                            val arrayList = ArrayList<ProductsTable>()
-                            it?.forEach {
-                                arrayList.add(it)
-                            }
-                            onProductSelectedListener.onProductSelected(arrayList)
+                            onProductSelectedListener.onProductSelected(it)
                         }
                         currentStage?.close()
                     }

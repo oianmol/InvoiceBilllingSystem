@@ -36,7 +36,7 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 
     compile "no.tornado:tornadofx:$tornadofx_version"
-
+    implementation 'com.google.code.gson:gson:2.8.5'
     compile "com.j256.ormlite:ormlite-jdbc:4.48"
     compile "com.j256.ormlite:ormlite-core:4.48"
     compile 'org.xerial:sqlite-jdbc:3.21.0.1'

@@ -16,7 +16,7 @@ class CustomersTable {
     var dateCreated: Long = 0L
 
     @DatabaseField(canBeNull = false)
-    var aadharCard : String = ""
+    var aadharCard: String = ""
 
     @DatabaseField(canBeNull = false)
     var dateModified: Long = 0L
@@ -25,6 +25,6 @@ class CustomersTable {
     var balance: Double = 0.0
 
     override fun toString(): String {
-        return "$customerId $customerName $balance $dateCreated $dateModified"
+        return "Id:$customerId Name:$customerName Balance:$balance CreatedDate:$dateCreated Modified:$dateModified"
     }
 }

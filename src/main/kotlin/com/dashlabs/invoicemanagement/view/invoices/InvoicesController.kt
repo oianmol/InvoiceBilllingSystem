@@ -9,11 +9,13 @@ import io.reactivex.schedulers.Schedulers
 import javafx.beans.property.Property
 import javafx.beans.property.SimpleListProperty
 import javafx.collections.FXCollections
+import javafx.collections.ObservableList
 import tornadofx.*
 
 class InvoicesController : Controller() {
 
-    private val invoicesListObserver = SimpleListProperty<InvoiceTable>()
+    val invoicesListObserver = SimpleListProperty<InvoiceTable>()
+    val productsListObserver = SimpleListProperty<ProductsTable>()
 
     fun requestForInvoices() {
         val listOfInvoices = Database.listInvoices()
@@ -21,6 +23,12 @@ class InvoicesController : Controller() {
             listOfInvoices?.let {
                 invoicesListObserver.set(FXCollections.observableArrayList(it))
             }
+        }
+    }
+
+    fun updateProductsObserver(productsTable: ObservableList<ProductsTable>?) {
+        runLater {
+            this.productsListObserver.set(productsTable)
         }
     }
 
@@ -56,9 +64,12 @@ class InvoicesController : Controller() {
                     val invoice = Invoice()
                     invoice.customerId = customerId.value
                     invoice.productsList = productsList.value
-                    Database.createInvoice(invoice)?.let { it1 -> it.onSuccess(it1) }
+                    Database.createInvoice(invoice)?.let { it1 -> it.onSuccess(it1) } ?: kotlin.run {
+                        it.onError(java.lang.Exception())
+                    }
                 }
             } catch (ex: Exception) {
+                ex.printStackTrace()
                 it.onError(ex)
             }
         }.subscribeOn(Schedulers.io())
@@ -77,7 +88,14 @@ class InvoicesController : Controller() {
 }
 
 class InvoiceViewModel : ItemViewModel<Invoice>(Invoice()) {
+
+    fun clearValues() {
+        customerId.value = null
+        productsList.value = null
+        customer.value = null
+    }
+
     val customerId = bind(Invoice::customerId)
     val productsList = bind(Invoice::productsList)
-    val searchCustomerName = bind(Invoice::searchCustomerName)
+    var customer = bind(Invoice::customer)
 }

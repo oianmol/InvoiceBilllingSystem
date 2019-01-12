@@ -4,13 +4,13 @@ import com.dashlabs.invoicemanagement.view.admin.Admin
 import com.dashlabs.invoicemanagement.view.customers.Customer
 import com.dashlabs.invoicemanagement.view.invoices.Invoice
 import com.dashlabs.invoicemanagement.view.products.Product
+import com.google.gson.Gson
 import com.j256.ormlite.dao.Dao
 import com.j256.ormlite.dao.DaoManager
 import com.j256.ormlite.jdbc.JdbcConnectionSource
 import com.j256.ormlite.table.TableUtils
-import javafx.collections.ObservableList
 import java.io.File
-import java.util.ArrayList
+import java.util.*
 
 object Database {
 
@@ -163,7 +163,7 @@ object Database {
         invoiceTable.customerId = invoice.customerId
         invoiceTable.dateCreated = System.currentTimeMillis()
         invoiceTable.dateModified = System.currentTimeMillis()
-        invoiceTable.productsPurchased = invoice.productsList.asArrayList()
+        invoiceTable.productsPurchased = Gson().toJson(invoice.productsList.asArrayList())
         // persist the account object to the database
         val id = invoicesDao?.create(invoiceTable)
         connectionSource.close()
@@ -177,6 +177,10 @@ object Database {
         } ?: kotlin.run {
             return null
         }
+    }
+
+    fun getCustomer(customerId: Long): CustomersTable? {
+        return customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()?.first()
     }
 
 }
