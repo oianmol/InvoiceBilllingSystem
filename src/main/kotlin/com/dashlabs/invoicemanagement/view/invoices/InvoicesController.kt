@@ -28,7 +28,11 @@ class InvoicesController : Controller() {
 
     fun updateProductsObserver(productsTable: ObservableList<ProductsTable>?) {
         runLater {
-            this.productsListObserver.set(productsTable)
+            productsTable?.let {
+                this.productsListObserver.set(productsTable)
+            } ?: kotlin.run {
+                this.productsListObserver.set(FXCollections.observableArrayList(listOf()))
+            }
         }
     }
 
@@ -54,35 +58,36 @@ class InvoicesController : Controller() {
                 }
     }
 
-    fun addInvoice(customerId: Property<Long>,
-                   productsList: Property<MutableList<ProductsTable>>) {
-        Single.create<InvoiceTable> {
+    fun addInvoice(invoiceViewModel: InvoiceViewModel): Single<InvoiceTable> {
+        val subscription = Single.create<InvoiceTable> {
             try {
-                if (customerId.value.toString().isEmpty() || productsList.value.isEmpty()) {
-                    it.onError(Exception())
-                } else {
-                    val invoice = Invoice()
-                    invoice.customerId = customerId.value
-                    invoice.productsList = productsList.value
-                    Database.createInvoice(invoice)?.let { it1 -> it.onSuccess(it1) } ?: kotlin.run {
-                        it.onError(java.lang.Exception())
-                    }
-                }
+                val customerId = invoiceViewModel.customerId
+                val productsList = invoiceViewModel.productsList
+                val invoice = Invoice()
+                invoice.customerId = customerId.value
+                invoice.productsList = productsList.value
+                Database.createInvoice(invoice)?.let { it1 -> it.onSuccess(it1) }
             } catch (ex: Exception) {
                 ex.printStackTrace()
                 it.onError(ex)
             }
         }.subscribeOn(Schedulers.io())
                 .observeOn(JavaFxScheduler.platform())
-                .subscribe { t1, t2 ->
-                    t1?.let {
-                        invoicesListObserver.add(it)
-                        print(it)
-                    }
-                    t2?.let {
-                        print(it)
-                    }
-                }
+
+        subscription.subscribe { t1, t2 ->
+            t1?.let {
+                invoicesListObserver.add(it)
+                print(it)
+                invoiceViewModel.clearValues()
+                updateProductsObserver(null)
+            }
+            t2?.let {
+                print(it)
+            }
+        }
+
+        return subscription
+
     }
 
 }
