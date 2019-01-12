@@ -5,7 +5,7 @@ import javafx.geometry.Pos
 import javafx.scene.layout.VBox
 import tornadofx.*
 
-class CustomersView : View("Customers View") {
+class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedListener? = null) : View("Customers View") {
 
     private val customersViewModel = CustomerViewModel()
     private val customersController: CustomersController by inject()
@@ -26,6 +26,12 @@ class CustomersView : View("Customers View") {
                 column("Date Created", CustomersTable::dateCreated)
                 column("Aadhar Card", CustomersTable::aadharCard)
                 column("Balance", CustomersTable::balance)
+                onDoubleClick {
+                    onCustomerSelectedListener?.let {
+                        it.onCustomerSelected(this.selectedItem!!)
+                        currentStage?.close()
+                    }
+                }
             }
         }
     }
@@ -41,7 +47,7 @@ class CustomersView : View("Customers View") {
                     }
 
                     field("Aadhar Number") {
-                        textfield(customersViewModel.aadharNumber){
+                        textfield(customersViewModel.aadharNumber) {
                             this.filterInput { it.controlNewText.isLong() }
                         }.validator {
                             if (it.isNullOrBlank()) error("Please enter aadhar number!") else null
@@ -49,7 +55,7 @@ class CustomersView : View("Customers View") {
                     }
 
                     field("Age") {
-                        textfield(customersViewModel.age){
+                        textfield(customersViewModel.age) {
                             this.filterInput { it.controlNewText.isInt() }
                         }.validator {
                             if (it.isNullOrBlank()) error("Please enter Age") else null
@@ -70,7 +76,7 @@ class CustomersView : View("Customers View") {
 
                 button("Add Customer") {
                     setOnMouseClicked {
-                        customersController.addCustomer(customersViewModel.customerName,customersViewModel.aadharNumber,customersViewModel.age,customersViewModel.balance)
+                        customersController.addCustomer(customersViewModel.customerName, customersViewModel.aadharNumber, customersViewModel.age, customersViewModel.balance)
                     }
                 }
             }

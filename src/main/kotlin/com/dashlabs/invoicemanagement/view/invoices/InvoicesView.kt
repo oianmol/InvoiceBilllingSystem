@@ -1,6 +1,13 @@
 package com.dashlabs.invoicemanagement.view.invoices
 
-import javafx.geometry.Pos
+import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
+import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
+import com.dashlabs.invoicemanagement.view.customers.CustomersView
+import com.dashlabs.invoicemanagement.view.customers.OnCustomerSelectedListener
+import com.dashlabs.invoicemanagement.view.customers.OnProductSelectedListener
+import com.dashlabs.invoicemanagement.view.products.ProductsView
+import javafx.collections.ObservableList
+import javafx.geometry.Insets
 import javafx.scene.layout.VBox
 import tornadofx.*
 
@@ -10,56 +17,48 @@ class InvoicesView : View("Invoices View") {
     private val invoicesController: InvoicesController by inject()
 
     override val root = hbox {
-        this.add(getInvoicesView())
-    }
-
-    private fun getInvoicesView(): VBox {
-        return vbox {
+        this.add(vbox {
             hbox {
-                this.add(getSearchInvoiceForm())
                 this.add(getAddInvoiceView())
             }
-        }
+        })
     }
 
     private fun getAddInvoiceView(): VBox {
         return vbox {
             form {
-                fieldset {
-                    field("Search Customer Name") {
-                        textfield(invoiceViewModel.searchCustomerName).validator {
-                            if (it.isNullOrBlank()) error("Please enter customer name!") else null
-                        }
-                    }
-                }
-
-
-
-                button("Add Invoice") {
+                button("Select Customer") {
+                    vboxConstraints { margin = Insets(50.0) }
                     setOnMouseClicked {
-                        invoicesController.addInvoice(invoiceViewModel.customerId, invoiceViewModel.productsList)
-                    }
-                }
-            }
-
-        }
-    }
-
-    private fun getSearchInvoiceForm(): VBox {
-        return vbox {
-            form {
-                fieldset {
-                    field("Search Invoice by customer name") {
-                        textfield(invoiceViewModel.searchCustomerName).validator {
-                            if (it.isNullOrBlank()) error("Please enter customer name!") else null
-                        }
+                        CustomersView(onCustomerSelectedListener = object : OnCustomerSelectedListener {
+                            override fun onCustomerSelected(customersTable: CustomersTable) {
+                                invoiceViewModel.customerId.value = customersTable.customerId
+                            }
+                        }).openWindow()
                     }
                 }
 
-                button("Search Invoice") {
-                    alignment = Pos.BOTTOM_RIGHT
+                button("Select Products") {
+                    vboxConstraints { margin = Insets(50.0) }
                     setOnMouseClicked {
-                        invoicesController.searchInvoice(invoiceViewModel.searchCustomerName)
+                        ProductsView(onProductSelectedListener = object : OnProductSelectedListener {
+                            override fun onProductSelected(productsTable: MutableList<ProductsTable>?) {
+                                invoiceViewModel.productsList.value = productsTable
+                            }
+                        }).openWindow()
+                    }
+                }
+
+                button("Create Invoice") {
+                    vboxConstraints { margin = Insets(50.0) }
+                    setOnMouseClicked {
+                        if (invoiceViewModel.customerId.value == 0L || invoiceViewModel.productsList.value.isEmpty()) {
+                            warning("Select products and customer first!").show()
+                            return@setOnMouseClicked
+                        } else {
+                            invoicesController.addInvoice(invoiceViewModel.customerId,
+                                    invoiceViewModel.productsList)
+                        }
                     }
                 }
             }

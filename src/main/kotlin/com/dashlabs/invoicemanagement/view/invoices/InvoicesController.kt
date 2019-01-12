@@ -47,7 +47,7 @@ class InvoicesController : Controller() {
     }
 
     fun addInvoice(customerId: Property<Long>,
-                   productsList: Property<ArrayList<ProductsTable>>) {
+                   productsList: Property<MutableList<ProductsTable>>) {
         Single.create<InvoiceTable> {
             try {
                 if (customerId.value.toString().isEmpty() || productsList.value.isEmpty()) {

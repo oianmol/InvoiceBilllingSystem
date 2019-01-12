@@ -10,7 +10,7 @@ class Invoice {
     var searchCustomerName by property<String>()
     fun searchProperty() = getProperty(Invoice::searchCustomerName)
 
-    var productsList by property<ArrayList<ProductsTable>>()
+    var productsList by property<MutableList<ProductsTable>>()
     fun productsProperty() = getProperty(Invoice::productsList)
 
     override fun toString() = "$customerId"

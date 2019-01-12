@@ -8,7 +8,9 @@ import com.j256.ormlite.dao.Dao
 import com.j256.ormlite.dao.DaoManager
 import com.j256.ormlite.jdbc.JdbcConnectionSource
 import com.j256.ormlite.table.TableUtils
+import javafx.collections.ObservableList
 import java.io.File
+import java.util.ArrayList
 
 object Database {
 
@@ -161,7 +163,7 @@ object Database {
         invoiceTable.customerId = invoice.customerId
         invoiceTable.dateCreated = System.currentTimeMillis()
         invoiceTable.dateModified = System.currentTimeMillis()
-        invoiceTable.productsPurchased = invoice.productsList
+        invoiceTable.productsPurchased = invoice.productsList.asArrayList()
         // persist the account object to the database
         val id = invoicesDao?.create(invoiceTable)
         connectionSource.close()
@@ -177,4 +179,10 @@ object Database {
         }
     }
 
+}
+
+fun <E> MutableList<E>.asArrayList(): ArrayList<E>? {
+    val arrayList = ArrayList<E>()
+    arrayList.addAll(this)
+    return arrayList
 }

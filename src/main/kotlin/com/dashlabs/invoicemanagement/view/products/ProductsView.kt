@@ -1,11 +1,15 @@
 package com.dashlabs.invoicemanagement.view.products
 
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
+import com.dashlabs.invoicemanagement.view.customers.OnProductSelectedListener
+import javafx.geometry.Insets
 import javafx.geometry.Pos
+import javafx.scene.control.TableView
 import javafx.scene.layout.VBox
 import tornadofx.*
+import java.util.*
 
-class ProductsView : View("Products View") {
+class ProductsView(private val onProductSelectedListener: OnProductSelectedListener? = null) : View("Products View") {
 
     private val productViewModel = ProductViewModel()
     private val productsController: ProductsController by inject()
@@ -14,16 +18,40 @@ class ProductsView : View("Products View") {
         this.add(getProductsView())
     }
 
+    private var selectionModel: TableView.TableViewSelectionModel<ProductsTable>? = null
+
     private fun getProductsView(): VBox {
         return vbox {
             hbox {
                 this.add(getSearchProductForm())
                 this.add(getAddProductView())
             }
+            onProductSelectedListener?.let {
+                this.add(button("Select Products") {
+                    vboxConstraints {
+                        margin = Insets(20.0)
+                    }
+                    setOnMouseClicked {
+                        selectionModel?.selectedItems.let {
+                            val arrayList = ArrayList<ProductsTable>()
+                            it?.forEach {
+                                arrayList.add(it)
+                            }
+                            onProductSelectedListener.onProductSelected(arrayList)
+                        }
+                        currentStage?.close()
+                    }
+                })
+            }
+
             tableview<ProductsTable>(productsController.productsListObserver) {
                 column("ID", ProductsTable::productId)
                 column("Product Name", ProductsTable::productName)
                 column("Amount", ProductsTable::amount)
+                onProductSelectedListener?.let {
+                    multiSelect(enable = true)
+                    this@ProductsView.selectionModel = selectionModel
+                }
             }
         }
     }
