@@ -2,6 +2,7 @@ package com.dashlabs.invoicemanagement.databaseconnection
 
 import com.dashlabs.invoicemanagement.view.admin.Admin
 import com.dashlabs.invoicemanagement.view.customers.Customer
+import com.dashlabs.invoicemanagement.view.invoices.Invoice
 import com.dashlabs.invoicemanagement.view.products.Product
 import com.j256.ormlite.dao.Dao
 import com.j256.ormlite.dao.DaoManager
@@ -19,17 +20,21 @@ object Database {
 
     private var customerDao: Dao<CustomersTable, *>?
 
+    private var invoicesDao: Dao<InvoiceTable, *>?
+
     init {
         connectionSource = getDatabaseConnection()
 
         TableUtils.createTableIfNotExists(connectionSource, AdminTable::class.java)
         TableUtils.createTableIfNotExists(connectionSource, ProductsTable::class.java)
         TableUtils.createTableIfNotExists(connectionSource, CustomersTable::class.java)
+        TableUtils.createTableIfNotExists(connectionSource, InvoiceTable::class.java)
 
         // instantiate the DAO to handle Account with String id
         accountDao = DaoManager.createDao(connectionSource, AdminTable::class.java)
         productsDao = DaoManager.createDao(connectionSource, ProductsTable::class.java)
         customerDao = DaoManager.createDao(connectionSource, CustomersTable::class.java)
+        invoicesDao = DaoManager.createDao(connectionSource, InvoiceTable::class.java)
 
     }
 
@@ -140,6 +145,35 @@ object Database {
             customerDao?.queryForAll()
         } else {
             customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerName.name, search)?.query()
+        }
+    }
+
+    fun listInvoices(customerId: String = ""): List<InvoiceTable>? {
+        return if (customerId.isEmpty()) {
+            invoicesDao?.queryForAll()
+        } else {
+            invoicesDao?.queryBuilder()?.where()?.like(InvoiceTable::customerId.name, customerId)?.query()
+        }
+    }
+
+    fun createInvoice(invoice: Invoice): InvoiceTable? {
+        val invoiceTable = InvoiceTable()
+        invoiceTable.customerId = invoice.customerId
+        invoiceTable.dateCreated = System.currentTimeMillis()
+        invoiceTable.dateModified = System.currentTimeMillis()
+        invoiceTable.productsPurchased = invoice.productsList
+        // persist the account object to the database
+        val id = invoicesDao?.create(invoiceTable)
+        connectionSource.close()
+
+        id?.let {
+            return if (it > 0) {
+                invoiceTable
+            } else {
+                null
+            }
+        } ?: kotlin.run {
+            return null
         }
     }
 

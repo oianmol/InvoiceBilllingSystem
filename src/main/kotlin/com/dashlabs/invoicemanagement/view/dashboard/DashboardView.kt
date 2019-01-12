@@ -3,6 +3,7 @@ package com.dashlabs.invoicemanagement.view.dashboard
 import com.dashlabs.invoicemanagement.app.InvoiceApp
 import com.dashlabs.invoicemanagement.view.admin.AdminLoginView
 import com.dashlabs.invoicemanagement.view.customers.CustomersView
+import com.dashlabs.invoicemanagement.view.invoices.InvoicesView
 import com.dashlabs.invoicemanagement.view.products.ProductsView
 import javafx.geometry.Insets
 import javafx.geometry.Pos
@@ -17,12 +18,14 @@ class DashboardView : View("Dashboard") {
     private var tabNames: ArrayList<String> = arrayListOf("Products", "Customers", "Invoices")
     private var productsView: ProductsView = ProductsView()
     private var customersView: CustomersView = CustomersView()
+    private var invoicesView = InvoicesView()
 
     init {
         subscribe<InvoiceApp.AdminLoggedInEvent> {
             dashboardController.adminLoggedin(it.admin)
             productsView.requestForProducts()
             customersView.requestForCustomers()
+            invoicesView.requestForInvoices()
             println("User logged in! ${it.admin.username}")
         }
     }
@@ -71,6 +74,7 @@ class DashboardView : View("Dashboard") {
             }
 
             tab(tabNames[2]) {
+                this.add(invoicesView)
             }
         }
     }
