@@ -23,10 +23,6 @@ class InvoiceTable {
     @DatabaseField(canBeNull = false)
     var dateModified: Long = 0L
 
-    var formattedCreatedDate: String = Date(dateCreated).toString()
-
-    fun getCustomerNameId() = Database.getCustomer(customerId)?.toString() ?: ""
-
     override fun toString(): String {
         return "$customerId $invoiceId $productsPurchased $dateCreated $dateModified"
     }

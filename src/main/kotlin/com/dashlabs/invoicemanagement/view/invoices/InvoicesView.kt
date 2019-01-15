@@ -9,6 +9,8 @@ import com.dashlabs.invoicemanagement.view.customers.OnProductSelectedListener
 import com.dashlabs.invoicemanagement.view.products.ProductsView
 import javafx.collections.ObservableList
 import javafx.geometry.Insets
+import javafx.scene.layout.HBox
+import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import tornadofx.*
 
@@ -18,35 +20,23 @@ class InvoicesView : View("Invoices View") {
     private val invoicesController: InvoicesController by inject()
     private var productsView: VBox? = null
 
-    override val root = scrollpane {
-        content = vbox {
+    override val root = hbox {
+        vbox {
+            this.add(customerView())
+            this.add(getProductsView())
+        }
+
+        tableview<InvoiceTable>(invoicesController.invoicesListObserver) {
             vboxConstraints { margin = Insets(10.0) }
-
-            hbox {
-                vbox {
-                    this.add(customerView())
-                    this.add(getProductsView())
-                }
-
-                this.add(createInvoiceAndList())
-            }
-
-
+            tag = "invoices"
+            column("Invoice Id",InvoiceTable::invoiceId)
+            column("Date Created", InvoiceTable::dateModified)
+            column("Customer Name Id", InvoiceTable::customerId)
+            column("Products Purchased",InvoiceTable::productsPurchased)
+            columnResizePolicy = SmartResize.POLICY
         }
     }
 
-    private fun createInvoiceAndList(): VBox {
-        return vbox {
-            vboxConstraints { margin = Insets(10.0) }
-
-            tableview<InvoiceTable>(invoicesController.invoicesListObserver) {
-                vboxConstraints { margin = Insets(10.0) }
-                tag = "invoices"
-                column("Date Created", InvoiceTable::formattedCreatedDate)
-                column("Customer Name Id", InvoiceTable::getCustomerNameId)
-            }
-        }
-    }
 
     private fun getProductsView(): VBox {
         return vbox {
@@ -71,6 +61,7 @@ class InvoicesView : View("Invoices View") {
                 column("ID", ProductsTable::productId)
                 column("Product Name", ProductsTable::productName)
                 column("Amount", ProductsTable::amount)
+                columnResizePolicy = SmartResize.POLICY
             }
 
             button("Create Invoice") {
