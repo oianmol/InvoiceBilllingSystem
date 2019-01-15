@@ -30,10 +30,9 @@ class InvoicesView : View("Invoices View") {
             vboxConstraints { margin = Insets(10.0) }
             tag = "invoices"
             column("Invoice Id",InvoiceTable::invoiceId)
-            column("Date Created", InvoiceTable::dateModified)
-            column("Customer Name Id", InvoiceTable::customerId)
+            column("Date Modified", InvoiceTable::dateModified)
+            column("Customer Id", InvoiceTable::customerId)
             column("Products Purchased",InvoiceTable::productsPurchased)
-            columnResizePolicy = SmartResize.POLICY
         }
     }
 
@@ -61,7 +60,6 @@ class InvoicesView : View("Invoices View") {
                 column("ID", ProductsTable::productId)
                 column("Product Name", ProductsTable::productName)
                 column("Amount", ProductsTable::amount)
-                columnResizePolicy = SmartResize.POLICY
             }
 
             button("Create Invoice") {

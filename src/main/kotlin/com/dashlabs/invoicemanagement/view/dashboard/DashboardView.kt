@@ -10,6 +10,7 @@ import javafx.geometry.Pos
 import javafx.scene.control.TabPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
+import javafx.scene.layout.VBox
 import tornadofx.*
 
 class DashboardView : View("Dashboard") {
@@ -30,51 +31,64 @@ class DashboardView : View("Dashboard") {
         }
     }
 
-    override val root = vbox {
-        minHeight = 400.0
-        minWidth = 600.0
-        hbox {
-            label("Company Name \nRoad no.12 Banjara Hills\nHyderabad 500034") {
-                alignment = Pos.TOP_LEFT
-                paddingAll = 10.0
-                HBox.setMargin(this, Insets(10.0))
+    override val root = hbox {
+        this.add(imageview("nfs.jpg",lazyload = true){
+            minWidth = 1200.0
+            minHeight = 628.0
+            onDoubleClick {
+                this.removeFromParent()
+                this@hbox.add(getMainView())
             }
-            label(dashboardController.statusProperty) {
-                alignment = Pos.TOP_RIGHT
-                paddingAll = 10.0
-                HBox.setMargin(this, Insets(10.0))
-            }
+        })
+    }
 
-            button(dashboardController.admingSettingsProperty) {
-                HBox.setMargin(this, Insets(10.0))
-                hboxConstraints {
-                    marginRight = 20.0
-                    hGrow = Priority.ALWAYS
+    private fun getMainView(): VBox {
+        return vbox {
+            minHeight = 400.0
+            minWidth = 600.0
+            hbox {
+                label("Company Name \nRoad no.12 Banjara Hills\nHyderabad 500034") {
+                    alignment = Pos.TOP_LEFT
+                    paddingAll = 10.0
+                    HBox.setMargin(this, Insets(10.0))
                 }
-                setOnMouseClicked {
-                    if (isAdminLoggedIn()) {
-                        openInternalWindow(AdminSettingsView::class)
-                    } else {
-                        openInternalWindow(AdminLoginView::class)
+                label(dashboardController.statusProperty) {
+                    alignment = Pos.TOP_RIGHT
+                    paddingAll = 10.0
+                    HBox.setMargin(this, Insets(10.0))
+                }
+
+                button(dashboardController.admingSettingsProperty) {
+                    HBox.setMargin(this, Insets(10.0))
+                    hboxConstraints {
+                        marginRight = 20.0
+                        hGrow = Priority.ALWAYS
+                    }
+                    setOnMouseClicked {
+                        if (isAdminLoggedIn()) {
+                            openInternalWindow(AdminSettingsView::class)
+                        } else {
+                            openInternalWindow(AdminLoginView::class)
+                        }
                     }
                 }
             }
-        }
 
 
-        tabpane {
-            tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
-            enableWhen(dashboardController.adminLogin)
-            tab(tabNames[0]) {
-                this.add(productsView)
-            }
+            tabpane {
+                tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
+                enableWhen(dashboardController.adminLogin)
+                tab(tabNames[0]) {
+                    this.add(productsView)
+                }
 
-            tab(tabNames[1]) {
-                this.add(customersView)
-            }
+                tab(tabNames[1]) {
+                    this.add(customersView)
+                }
 
-            tab(tabNames[2]) {
-                this.add(invoicesView)
+                tab(tabNames[2]) {
+                    this.add(invoicesView)
+                }
             }
         }
     }

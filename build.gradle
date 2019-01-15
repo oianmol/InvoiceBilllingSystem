@@ -21,6 +21,12 @@ compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 
+task copyResources(type: Copy) {
+    from "src/main/resources"
+    into "out/production/classes"
+}
+processResources.dependsOn copyResources
+
 repositories {
     mavenLocal()
     mavenCentral()
