@@ -14,5 +14,14 @@ class Invoice {
     var productsList by property<MutableList<ProductsTable>>()
     fun productsProperty() = getProperty(Invoice::productsList)
 
+    var productsPrice by property<String>()
+    fun productsPriceProperty() = getProperty(Invoice::productsPrice)
+
+    var creditAmount by property<Number>()
+    fun creditAmountProperty() = getProperty(Invoice::creditAmount)
+
+    var payableAmount by property<String>()
+    fun payableAmountProp() = getProperty(Invoice::payableAmount)
+
     override fun toString() = "$customerId"
 }

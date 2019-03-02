@@ -15,7 +15,7 @@ class CustomersTable {
     @DatabaseField(canBeNull = false)
     var dateCreated: Long = 0L
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(canBeNull = false, unique = true)
     var aadharCard: String = ""
 
     @DatabaseField(canBeNull = false)
@@ -25,6 +25,18 @@ class CustomersTable {
     var balance: Double = 0.0
 
     override fun toString(): String {
-        return "Id:$customerId Name:$customerName Balance:$balance CreatedDate:$dateCreated Modified:$dateModified"
+        return getFormattedCustomer(this)
+    }
+
+    private fun getFormattedCustomer(customer: CustomersTable): String {
+        customer.let {
+            val builder = StringBuilder()
+            builder.append("Name: ${customer.customerName}")
+            builder.append("\n")
+            builder.append("Aadhar Card: ${customer.aadharCard}")
+            builder.append("\n")
+            builder.append("Balance: ${customer.balance}")
+            return builder.toString()
+        }
     }
 }

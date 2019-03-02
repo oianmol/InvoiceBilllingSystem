@@ -163,6 +163,15 @@ object Database {
         invoiceTable.customerId = invoice.customerId
         invoiceTable.dateCreated = System.currentTimeMillis()
         invoiceTable.dateModified = System.currentTimeMillis()
+        invoice.creditAmount?.let {
+            if (it.toDouble() > 0) {
+                val customer = getCustomer(invoice.customerId)
+                customer?.let {
+                    it.balance += invoice.creditAmount.toDouble()
+                }
+                customerDao?.update(customer)
+            }
+        }
         invoiceTable.productsPurchased = Gson().toJson(invoice.productsList.asArrayList())
         // persist the account object to the database
         val id = invoicesDao?.create(invoiceTable)
@@ -181,6 +190,11 @@ object Database {
 
     fun getCustomer(customerId: Long): CustomersTable? {
         return customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()?.first()
+    }
+
+    fun updateCustomer(customer: CustomersTable): Boolean {
+        customerDao?.update(customer)
+        return true
     }
 
 }

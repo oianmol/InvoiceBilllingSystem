@@ -1,8 +1,11 @@
 package com.dashlabs.invoicemanagement.view.invoices
 
+import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
 import com.dashlabs.invoicemanagement.databaseconnection.Database
 import com.dashlabs.invoicemanagement.databaseconnection.InvoiceTable
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
+import com.dashlabs.invoicemanagement.view.admin.AdminLoginView
+import com.dashlabs.invoicemanagement.view.customers.CustomersView
 import io.reactivex.Single
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import io.reactivex.schedulers.Schedulers
@@ -66,6 +69,7 @@ class InvoicesController : Controller() {
                 val invoice = Invoice()
                 invoice.customerId = customerId.value
                 invoice.productsList = productsList.value
+                invoice.creditAmount = invoiceViewModel.creditAmount.value
                 Database.createInvoice(invoice)?.let { it1 -> it.onSuccess(it1) }
             } catch (ex: Exception) {
                 ex.printStackTrace()
@@ -80,6 +84,10 @@ class InvoicesController : Controller() {
                 print(it)
                 invoiceViewModel.clearValues()
                 updateProductsObserver(null)
+
+                find<CustomersView> {
+                    requestForCustomers()
+                }
             }
             t2?.let {
                 print(it)
@@ -90,17 +98,28 @@ class InvoicesController : Controller() {
 
     }
 
+    fun getCustomerById(customerId: Long): Single<CustomersTable?> {
+        return Single.fromCallable {
+            Database.getCustomer(customerId)
+        }.subscribeOn(Schedulers.io())
+                .observeOn(JavaFxScheduler.platform())
+    }
+
 }
 
 class InvoiceViewModel : ItemViewModel<Invoice>(Invoice()) {
-
     fun clearValues() {
         customerId.value = null
         productsList.value = null
         customer.value = null
+        creditAmount.value = null
+        totalPrice.value = null
     }
 
     val customerId = bind(Invoice::customerId)
     val productsList = bind(Invoice::productsList)
     var customer = bind(Invoice::customer)
+    var totalPrice = bind(Invoice::productsPrice)
+    var creditAmount = bind(Invoice::creditAmount)
+    var payableAmount = bind(Invoice::payableAmount)
 }

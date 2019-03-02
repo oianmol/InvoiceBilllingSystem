@@ -9,9 +9,10 @@ import com.dashlabs.invoicemanagement.view.customers.OnProductSelectedListener
 import com.dashlabs.invoicemanagement.view.products.ProductsView
 import javafx.collections.ObservableList
 import javafx.geometry.Insets
-import javafx.scene.layout.HBox
-import javafx.scene.layout.Priority
+import javafx.scene.control.Alert
+import javafx.scene.control.ButtonType
 import javafx.scene.layout.VBox
+import javafx.stage.Screen
 import tornadofx.*
 
 class InvoicesView : View("Invoices View") {
@@ -21,18 +22,28 @@ class InvoicesView : View("Invoices View") {
     private var productsView: VBox? = null
 
     override val root = hbox {
-        vbox {
-            this.add(customerView())
-            this.add(getProductsView())
-        }
 
-        tableview<InvoiceTable>(invoicesController.invoicesListObserver) {
-            vboxConstraints { margin = Insets(10.0) }
-            tag = "invoices"
-            column("Invoice Id",InvoiceTable::invoiceId)
-            column("Date Modified", InvoiceTable::dateModified)
-            column("Customer Id", InvoiceTable::customerId)
-            column("Products Purchased",InvoiceTable::productsPurchased)
+        label(invoiceViewModel.customer)
+
+        this.add(getProductsView())
+
+        this.add(oldInvoicesView())
+    }
+
+    private fun oldInvoicesView(): VBox {
+        return vbox {
+            tableview<InvoiceTable>(invoicesController.invoicesListObserver) {
+                this.minWidth = Screen.getPrimary().visualBounds.width / 2
+                vboxConstraints { margin = Insets(10.0) }
+                tag = "invoices"
+                column("Invoice Id", InvoiceTable::invoiceId)
+                column("Date Modified", InvoiceTable::dateModified)
+                column("Customer Id", InvoiceTable::customerId)
+                column("Products Purchased", InvoiceTable::productsPurchased)
+                onDoubleClick {
+                    showInvoiceDetails(this.selectedItem)
+                }
+            }
         }
     }
 
@@ -42,61 +53,142 @@ class InvoicesView : View("Invoices View") {
             this@InvoicesView.productsView = this
             vboxConstraints { margin = Insets(10.0) }
 
-            button("Select Products") {
-                vboxConstraints { margin = Insets(10.0) }
-                setOnMouseClicked {
-                    ProductsView(onProductSelectedListener = object : OnProductSelectedListener {
-                        override fun onProductSelected(productsTable: ObservableList<ProductsTable>?) {
-                            invoiceViewModel.productsList.value = productsTable
-                            invoicesController.updateProductsObserver(productsTable)
-                        }
-                    }).openWindow()
+            this.add(produtCustomerButtonView())
+
+            this.add(getSelectedProductsView())
+
+            vbox {
+                vbox {
+                    vboxConstraints { margin = Insets(10.0) }
+                    label("Total Amount: ") {
+                        vboxConstraints { margin = Insets(10.0) }
+                    }
+
+                    textfield(invoiceViewModel.totalPrice) {
+                        this.isEditable = false
+                        this.filterInput { it.controlNewText.isDouble() }
+                    }
                 }
-            }
 
-            tableview(invoicesController.productsListObserver) {
-                tag = "products"
-                vboxConstraints { margin = Insets(10.0) }
-                column("ID", ProductsTable::productId)
-                column("Product Name", ProductsTable::productName)
-                column("Amount", ProductsTable::amount)
-            }
+                vbox {
+                    vboxConstraints { margin = Insets(10.0) }
+                    label("Credit Amount: ") {
+                        vboxConstraints { margin = Insets(10.0) }
+                    }
 
-            button("Create Invoice") {
-                vboxConstraints { margin = Insets(10.0) }
-                setOnMouseClicked {
-                    if (invoiceViewModel.customerId.value == 0L || invoiceViewModel.productsList.value.isEmpty()) {
-                        warning("Select products and customer first!").show()
-                        return@setOnMouseClicked
-                    } else {
-                        invoicesController.addInvoice(invoiceViewModel)
+                    textfield(invoiceViewModel.creditAmount) {
+                        this.filterInput {
+                            it.controlNewText.isDouble() && it.controlNewText.toDouble() <= invoiceViewModel.totalPrice.value.toDouble()
+                        }
+                    }.textProperty().addListener { observable, oldValue, newValue ->
+                        try {
+                            val bal = invoiceViewModel.totalPrice.value.toDouble().minus(invoiceViewModel.creditAmount.value.toDouble()).toString()
+                            invoiceViewModel.payableAmount.value = bal
+                        } catch (ex: Exception) {
+
+                        }
+                    }
+
+                }
+
+                vbox {
+                    vboxConstraints { margin = Insets(10.0) }
+                    label("Payable Amount: ") {
+                        vboxConstraints { margin = Insets(10.0) }
+                    }
+
+                    textfield(invoiceViewModel.payableAmount) {
+                        this.isEditable = false
+                    }
+
+                }
+
+                button("Create Invoice") {
+                    vboxConstraints { margin = Insets(10.0) }
+                    setOnMouseClicked {
+                        if (invoiceViewModel.customerId.value == 0L || invoiceViewModel.productsList.value.isEmpty()) {
+                            warning("Select products and customer first!").show()
+                            return@setOnMouseClicked
+                        } else {
+                            if (invoiceViewModel.creditAmount.value != null && invoiceViewModel.creditAmount.value.toDouble() > 0) {
+                                alert(Alert.AlertType.CONFIRMATION, "Credit Amount",
+                                        "You are not paying in full and amount ${invoiceViewModel.creditAmount.value} will be added to your credits",
+                                        buttons = *arrayOf(ButtonType.OK, ButtonType.CANCEL), owner = currentWindow, title = "Hey!") {
+                                    if (it == ButtonType.OK) {
+                                        invoicesController.addInvoice(invoiceViewModel)
+                                    }
+                                }
+                            } else {
+                                invoicesController.addInvoice(invoiceViewModel)
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun customerView(): VBox {
-
+    private fun produtCustomerButtonView(): VBox {
         return vbox {
             vboxConstraints { margin = Insets(10.0) }
-            button("Select Customer") {
-                vboxConstraints { margin = Insets(10.0) }
-                setOnMouseClicked {
-                    CustomersView(onCustomerSelectedListener = object : OnCustomerSelectedListener {
-                        override fun onCustomerSelected(customersTable: CustomersTable) {
-                            invoiceViewModel.customerId.value = customersTable.customerId
-                            invoiceViewModel.customer.value = customersTable
-                        }
 
-                    }).openWindow()
+            hbox {
+                button("Select Products") {
+                    hboxConstraints { margin = Insets(0.0, 10.0, 0.0, 10.0) }
+                    setOnMouseClicked {
+                        ProductsView(onProductSelectedListener = object : OnProductSelectedListener {
+                            override fun onProductSelected(productsTable: ObservableList<ProductsTable>?) {
+                                invoiceViewModel.productsList.value = productsTable
+                                invoiceViewModel.totalPrice.value = productsTable?.map { it.amount }?.sum().toString()
+                                invoiceViewModel.payableAmount.value = productsTable?.map { it.amount }?.sum().toString()
+                                invoicesController.updateProductsObserver(productsTable)
+                            }
+                        }).openWindow()
+                    }
                 }
+
+                button("Select Customer") {
+                    hboxConstraints { margin = Insets(0.0, 10.0, 0.0, 10.0) }
+                    setOnMouseClicked {
+                        CustomersView(onCustomerSelectedListener = object : OnCustomerSelectedListener {
+                            override fun onCustomerSelected(customersTable: CustomersTable) {
+                                invoiceViewModel.customerId.value = customersTable.customerId
+                                invoiceViewModel.customer.value = customersTable
+                            }
+
+                        }).openWindow()
+                    }
+                }
+
             }
 
-            label(invoiceViewModel.customer)
         }
     }
 
+    private fun getSelectedProductsView(): VBox {
+        return vbox {
+            vboxConstraints { margin = Insets(10.0) }
+
+            tableview(invoicesController.productsListObserver) {
+                this.minWidth = Screen.getPrimary().visualBounds.width / 3
+                tag = "products"
+                vboxConstraints { margin = Insets(10.0) }
+                column("ID", ProductsTable::productId)
+                column("Product Name", ProductsTable::productName)
+                column("Amount", ProductsTable::amount)
+            }
+        }
+    }
+
+    private fun showInvoiceDetails(selectedItem: InvoiceTable?) {
+        selectedItem?.let {
+            invoicesController.getCustomerById(selectedItem.customerId).subscribe { t1, t2 ->
+                t1?.let { customer ->
+                    InvoiceDetailView(it, customer).openWindow()
+                }
+            }
+        }
+    }
 
     fun requestForInvoices() {
         invoicesController.requestForInvoices()

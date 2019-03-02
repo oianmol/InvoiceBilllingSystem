@@ -11,7 +11,11 @@ import javafx.scene.control.TabPane
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
+import javafx.stage.Screen
 import tornadofx.*
+import javafx.stage.Screen.getPrimary
+
+
 
 class DashboardView : View("Dashboard") {
 
@@ -32,9 +36,11 @@ class DashboardView : View("Dashboard") {
     }
 
     override val root = hbox {
+        this.hgrow = Priority.ALWAYS
         this.add(imageview("nfs.jpg",lazyload = true){
-            minWidth = 1200.0
-            minHeight = 628.0
+            val primScreenBounds = Screen.getPrimary().visualBounds
+            minWidth = primScreenBounds.width
+            minHeight = primScreenBounds.height
             onDoubleClick {
                 this.removeFromParent()
                 this@hbox.add(getMainView())
@@ -44,9 +50,9 @@ class DashboardView : View("Dashboard") {
 
     private fun getMainView(): VBox {
         return vbox {
-            minHeight = 400.0
-            minWidth = 600.0
+            this.vgrow = Priority.ALWAYS
             hbox {
+                this.minWidth = Screen.getPrimary().visualBounds.width
                 label("Company Name \nRoad no.12 Banjara Hills\nHyderabad 500034") {
                     alignment = Pos.TOP_LEFT
                     paddingAll = 10.0

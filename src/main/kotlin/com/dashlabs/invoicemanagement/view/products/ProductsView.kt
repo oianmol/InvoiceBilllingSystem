@@ -6,6 +6,7 @@ import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.TableView
 import javafx.scene.layout.VBox
+import javafx.stage.Screen
 import tornadofx.*
 import java.util.*
 
@@ -41,6 +42,7 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
             }
 
             tableview<ProductsTable>(productsController.productsListObserver) {
+                this.minWidth = Screen.getPrimary().visualBounds.width
                 column("ID", ProductsTable::productId)
                 column("Product Name", ProductsTable::productName)
                 column("Amount", ProductsTable::amount)

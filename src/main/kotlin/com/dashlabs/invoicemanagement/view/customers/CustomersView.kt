@@ -3,6 +3,7 @@ package com.dashlabs.invoicemanagement.view.customers
 import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
 import javafx.geometry.Pos
 import javafx.scene.layout.VBox
+import javafx.stage.Screen
 import tornadofx.*
 
 class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedListener? = null) : View("Customers View") {
@@ -21,6 +22,7 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
                 this.add(getAddProductView())
             }
             tableview<CustomersTable>(customersController.customersListObserver) {
+                this.minWidth = Screen.getPrimary().visualBounds.width
                 column("ID", CustomersTable::customerId)
                 column("Customer Name", CustomersTable::customerName)
                 column("Date Created", CustomersTable::dateCreated)
@@ -30,6 +32,8 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
                     onCustomerSelectedListener?.let {
                         it.onCustomerSelected(this.selectedItem!!)
                         currentStage?.close()
+                    }?:kotlin.run {
+                        CustomerDetailView(this.selectedItem!!).openWindow()
                     }
                 }
             }
