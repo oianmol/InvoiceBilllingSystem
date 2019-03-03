@@ -9,9 +9,9 @@ class Invoice {
     fun getCustomerId() = getProperty(Invoice::customerId)
 
     var customer by property<CustomersTable>()
-    fun getCustomer() =  getProperty(Invoice::customer)
+    fun getCustomer() = getProperty(Invoice::customer)
 
-    var productsList by property<MutableList<ProductsTable>>()
+    var productsList by property<HashMap<ProductsTable, Int>>()
     fun productsProperty() = getProperty(Invoice::productsList)
 
     var productsPrice by property<String>()

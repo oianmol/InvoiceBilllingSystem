@@ -9,16 +9,20 @@ import io.reactivex.Single
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import io.reactivex.schedulers.Schedulers
 import javafx.beans.property.SimpleListProperty
+import javafx.beans.property.SimpleMapProperty
+import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
+import javafx.collections.ObservableMap
+import org.sqlite.util.StringUtils
 import tornadofx.*
 import java.time.LocalDateTime
 
 class InvoicesController : Controller() {
 
     val invoicesListObserver = SimpleListProperty<InvoiceTable>()
-    val productsListObserver = SimpleListProperty<ProductsTable>()
-
+    val productsListObserver = SimpleMapProperty<ProductsTable,Int>()
+    var productslist = SimpleStringProperty()
 
     fun requestForInvoices() {
         val listOfInvoices = Database.listInvoices()
@@ -29,12 +33,15 @@ class InvoicesController : Controller() {
         }
     }
 
-    fun updateProductsObserver(productsTable: ObservableList<ProductsTable>?) {
+
+    fun updateProductsObserver(productsTable: ObservableMap<ProductsTable,Int>?) {
         runLater {
             productsTable?.let {
                 this.productsListObserver.set(productsTable)
+                val listedProducts = productsListObserver?.value?.map { it.key.productName + " (${it.key.amount} x " + it.value + ") = ${it.key.amount.times(it.value)}" }
+                productslist.value = StringUtils.join(listedProducts,"\n\n")
             } ?: kotlin.run {
-                this.productsListObserver.set(FXCollections.observableArrayList(listOf()))
+                this.productsListObserver.set(FXCollections.observableHashMap())
             }
         }
     }

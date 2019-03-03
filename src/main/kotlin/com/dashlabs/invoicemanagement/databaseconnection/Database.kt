@@ -176,7 +176,7 @@ object Database {
                 customerDao?.update(customer)
             }
         }
-        invoiceTable.productsPurchased = Gson().toJson(invoice.productsList.asArrayList())
+        invoiceTable.productsPurchased = Gson().toJson(invoice.productsList)
         // persist the account object to the database
         val id = invoicesDao?.create(invoiceTable)
         connectionSource.close()

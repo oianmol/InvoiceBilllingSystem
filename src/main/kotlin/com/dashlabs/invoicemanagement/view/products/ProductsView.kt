@@ -2,7 +2,7 @@ package com.dashlabs.invoicemanagement.view.products
 
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
 import com.dashlabs.invoicemanagement.view.customers.OnProductSelectedListener
-import javafx.beans.binding.Bindings
+import javafx.collections.FXCollections
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.TableView
@@ -25,7 +25,11 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
                     }
                     setOnMouseClicked {
                         selectionModel?.selectedItems.let {
-                            onProductSelectedListener.onProductSelected(it)
+                            val productsMap = FXCollections.observableHashMap<ProductsTable, Int>()
+                            it?.forEach {
+                                productsMap[it] = 1
+                            }
+                            onProductSelectedListener.onProductSelected(productsMap)
                         }
                         currentStage?.close()
                     }

@@ -8,7 +8,7 @@ import com.dashlabs.invoicemanagement.view.customers.OnCustomerSelectedListener
 import com.dashlabs.invoicemanagement.view.customers.OnProductSelectedListener
 import com.dashlabs.invoicemanagement.view.products.ProductsView
 import javafx.collections.FXCollections
-import javafx.collections.ObservableList
+import javafx.collections.ObservableMap
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.Alert
@@ -140,7 +140,7 @@ class InvoicesView : View("Invoices View") {
             button("Create Invoice") {
                 vboxConstraints { margin = Insets(10.0) }
                 setOnMouseClicked {
-                    if (invoiceViewModel.customerId.value == 0L || invoiceViewModel.productsList.value.isEmpty()) {
+                    if (invoiceViewModel.customerId.value == 0L || invoicesController.productsListObserver.value.isEmpty()) {
                         warning("Select products and customer first!").show()
                         return@setOnMouseClicked
                     } else {
@@ -168,14 +168,20 @@ class InvoicesView : View("Invoices View") {
                     hboxConstraints { margin = Insets(0.0, 10.0, 0.0, 10.0) }
                     setOnMouseClicked {
                         ProductsView(onProductSelectedListener = object : OnProductSelectedListener {
-                            override fun onProductSelected(productsTable: ObservableList<ProductsTable>?) {
-                                val currentList = FXCollections.observableArrayList<ProductsTable>(invoiceViewModel.productsList.value)
-                                productsTable?.let {
-                                    currentList.addAll(it.reversed())
+                            override fun onProductSelected(newSelectedProducts: ObservableMap<ProductsTable, Int>?) {
+                                val currentList = FXCollections.observableHashMap<ProductsTable, Int>()
+                                invoicesController.productsListObserver.value?.let {
+                                    currentList.putAll(it)
                                 }
-                                invoiceViewModel.productsList.value = currentList
-                                invoiceViewModel.totalPrice.value = currentList?.map { it.amount }?.sum().toString()
-                                invoiceViewModel.payableAmount.value = currentList?.map { it.amount }?.sum().toString()
+                                newSelectedProducts?.forEach { item ->
+                                    currentList[item.key]?.let {
+                                        currentList[item.key] = item.value + 1
+                                    } ?: kotlin.run {
+                                        currentList[item.key] = 1
+                                    }
+                                }
+                                invoiceViewModel.totalPrice.value = currentList.map { it.key.amount * it.value }?.sum().toString()
+                                invoiceViewModel.payableAmount.value = currentList.map { it.key.amount * it.value }?.sum().toString()
                                 invoicesController.updateProductsObserver(currentList)
                             }
                         }).openWindow()
@@ -203,16 +209,16 @@ class InvoicesView : View("Invoices View") {
     private fun getSelectedProductsView(): VBox {
         return vbox {
             vboxConstraints { margin = Insets(10.0) }
+            invoicesController.productsListObserver.onChange {
 
-            tableview(invoicesController.productsListObserver) {
-                columnResizePolicy = SmartResize.POLICY
-                maxHeight = 300.0
+            }
+            scrollpane {
                 vboxConstraints { margin = Insets(20.0) }
-                tag = "products"
-                vboxConstraints { margin = Insets(10.0) }
-                column("ID", ProductsTable::productId)
-                column("Product Name", ProductsTable::productName)
-                column("Amount", ProductsTable::amount)
+                label(invoicesController.productslist) {
+                    style {
+                        fontSize = Dimension(18.0, Dimension.LinearUnits.px)
+                    }
+                }
             }
         }
     }

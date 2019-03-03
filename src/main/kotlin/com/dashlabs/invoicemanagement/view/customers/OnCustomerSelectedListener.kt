@@ -2,12 +2,12 @@ package com.dashlabs.invoicemanagement.view.customers
 
 import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
-import javafx.collections.ObservableList
+import javafx.collections.ObservableMap
 
 interface OnCustomerSelectedListener {
     fun onCustomerSelected(customersTable: CustomersTable)
 }
 
 interface OnProductSelectedListener {
-    fun onProductSelected(productsTable: ObservableList<ProductsTable>?)
+    fun onProductSelected(newSelectedProducts: ObservableMap<ProductsTable, Int>?)
 }
