@@ -216,7 +216,7 @@ class InvoicesView : View("Invoices View") {
                 vboxConstraints { margin = Insets(20.0) }
                 label(invoicesController.productslist) {
                     style {
-                        fontSize = Dimension(18.0, Dimension.LinearUnits.px)
+                        fontSize = Dimension(15.0, Dimension.LinearUnits.px)
                     }
                 }
             }
