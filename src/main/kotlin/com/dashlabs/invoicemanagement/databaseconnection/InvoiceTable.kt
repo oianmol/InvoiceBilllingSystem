@@ -3,7 +3,6 @@ package com.dashlabs.invoicemanagement.databaseconnection
 import com.j256.ormlite.field.DataType
 import com.j256.ormlite.field.DatabaseField
 import com.j256.ormlite.table.DatabaseTable
-import java.util.*
 
 @DatabaseTable(tableName = "invoices")
 class InvoiceTable {

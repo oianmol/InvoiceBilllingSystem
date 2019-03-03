@@ -45,17 +45,18 @@ class CustomersController : Controller() {
                 }
     }
 
-    fun addCustomer(customerName: Property<String>, aadharNumber: Property<Number>, age: Property<Number>, balance: Property<Number>) {
+    fun addCustomer(customerName: Property<String>, aadharNumber: Property<Number>, balance: Property<Number>, state: Property<String>, district: Property<String>) {
         Single.create<CustomersTable> {
             try {
-                if (customerName.value.isNullOrEmpty() || aadharNumber.value.toInt() == 0 || !(age.value.toInt() in 1..100)) {
+                if (customerName.value.isNullOrEmpty() || aadharNumber.value.toInt() == 0 || state.value.isNullOrEmpty() || district.value.isNullOrEmpty()) {
                     it.onError(Exception())
                 } else {
                     val customer = Customer()
                     customer.name = customerName.value
                     customer.aadhar = aadharNumber.value
-                    customer.age = age.value
                     customer.balance = balance.value
+                    customer.state = state.value
+                    customer.district  = district.value
                     Database.createCustomer(customer)?.let { it1 -> it.onSuccess(it1) }
                 }
             } catch (ex: Exception) {
@@ -82,6 +83,6 @@ class CustomerViewModel : ItemViewModel<Customer>(Customer()) {
     val balance = bind(Customer::balanceProperty)
     val searchName = bind(Customer::searchProperty)
     val aadharNumber = bind(Customer::aadharProperty)
-    val age = bind(Customer::ageProperty)
+    val state = bind(Customer::state)
     val district = bind(Customer::districtProperty)
 }

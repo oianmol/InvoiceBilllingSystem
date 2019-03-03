@@ -15,19 +15,13 @@ class Customer {
     var balance by property<Number>()
     fun balanceProperty() = getProperty(Customer::balance)
 
-    var age by property<Number>()
-    fun ageProperty() = getProperty(Customer::age)
-
     var aadhar by property<Number>()
     fun aadharProperty() = getProperty(Customer::aadhar)
 
-    var district by property<Int>()
+    var district by property<String>()
     fun districtProperty() = getProperty(Customer::district)
 
-    var village by property<Int>()
-    fun villageProperty() = getProperty(Customer::village)
-
-    var state by property<Int>()
+    var state by property<String>()
     fun stateProperty() = getProperty(Customer::state)
 
     override fun toString() = name

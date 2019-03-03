@@ -10,6 +10,8 @@ import com.j256.ormlite.dao.DaoManager
 import com.j256.ormlite.jdbc.JdbcConnectionSource
 import com.j256.ormlite.table.TableUtils
 import java.io.File
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.*
 
 object Database {
@@ -119,6 +121,8 @@ object Database {
         customersTable.aadharCard = customer.aadhar.toString()
         customersTable.dateModified = System.currentTimeMillis()
         customersTable.balance = customer.balance.toDouble()
+        customersTable.district = customer.district
+        customersTable.state = customer.state
         // persist the account object to the database
         val id = customerDao?.create(customersTable)
         connectionSource.close()
@@ -138,7 +142,7 @@ object Database {
         return if (search.isEmpty()) {
             productsDao?.queryForAll()
         } else {
-            productsDao?.queryBuilder()?.where()?.like(ProductsTable::productName.name, search)?.query()
+            productsDao?.queryBuilder()?.where()?.like(ProductsTable::productName.name, "%$search%")?.query()
         }
     }
 
@@ -146,16 +150,16 @@ object Database {
         return if (search.isEmpty()) {
             customerDao?.queryForAll()
         } else {
-            customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerName.name, search)?.query()
+            customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerName.name, "%$search%")?.query()
         }
     }
 
-    fun listInvoices(customerId: String = ""): List<InvoiceTable>? {
-        return if (customerId.isEmpty()) {
-            invoicesDao?.queryForAll()
-        } else {
-            invoicesDao?.queryBuilder()?.where()?.like(InvoiceTable::customerId.name, customerId)?.query()
-        }
+    fun listInvoices(): List<InvoiceTable>? {
+        return invoicesDao?.queryForAll()
+    }
+
+    fun listInvoices(startTime: LocalDateTime, endTime: LocalDateTime): List<InvoiceTable>? {
+        return invoicesDao?.queryBuilder()?.where()?.between(InvoiceTable::dateModified.name,startTime.toEpochSecond(OffsetDateTime.now().offset).times(1000),endTime.toEpochSecond(OffsetDateTime.now().offset).times(1000))?.query()
     }
 
     fun createInvoice(invoice: Invoice): InvoiceTable? {
@@ -191,6 +195,11 @@ object Database {
     fun getCustomer(customerId: Long): CustomersTable? {
         return customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()?.first()
     }
+
+    fun getCustomers(customerName: String): MutableList<CustomersTable>? {
+        return customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerName.name, customerName)?.query()
+    }
+
 
     fun updateCustomer(customer: CustomersTable): Boolean {
         customerDao?.update(customer)

@@ -23,5 +23,8 @@ class Invoice {
     var payableAmount by property<String>()
     fun payableAmountProp() = getProperty(Invoice::payableAmount)
 
+    var searchCustomer by property<String>()
+    fun searchCustomerProp() = getProperty(Invoice::searchCustomer)
+
     override fun toString() = "$customerId"
 }

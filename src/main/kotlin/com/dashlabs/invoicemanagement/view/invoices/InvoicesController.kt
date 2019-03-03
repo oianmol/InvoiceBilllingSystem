@@ -4,21 +4,21 @@ import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
 import com.dashlabs.invoicemanagement.databaseconnection.Database
 import com.dashlabs.invoicemanagement.databaseconnection.InvoiceTable
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
-import com.dashlabs.invoicemanagement.view.admin.AdminLoginView
 import com.dashlabs.invoicemanagement.view.customers.CustomersView
 import io.reactivex.Single
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import io.reactivex.schedulers.Schedulers
-import javafx.beans.property.Property
 import javafx.beans.property.SimpleListProperty
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
 import tornadofx.*
+import java.time.LocalDateTime
 
 class InvoicesController : Controller() {
 
     val invoicesListObserver = SimpleListProperty<InvoiceTable>()
     val productsListObserver = SimpleListProperty<ProductsTable>()
+
 
     fun requestForInvoices() {
         val listOfInvoices = Database.listInvoices()
@@ -39,10 +39,10 @@ class InvoicesController : Controller() {
         }
     }
 
-    fun searchInvoice(customerName: Property<String>) {
+    fun searchInvoice(startTime: LocalDateTime, endTime: LocalDateTime) {
         Single.create<List<InvoiceTable>> {
             try {
-                val listOfInvoices = Database.listInvoices(customerId = customerName.value)
+                val listOfInvoices = Database.listInvoices(startTime, endTime)
                 listOfInvoices?.let { it1 -> it.onSuccess(it1) }
             } catch (ex: Exception) {
                 it.onError(ex)
@@ -51,11 +51,6 @@ class InvoicesController : Controller() {
                 .observeOn(JavaFxScheduler.platform())
                 .subscribe { t1, t2 ->
                     t1?.let {
-                        it.isNotEmpty().let {
-                            if (it) {
-                                customerName.value = ""
-                            }
-                        }
                         invoicesListObserver.set(FXCollections.observableArrayList<InvoiceTable>(it))
                     }
                 }
@@ -114,6 +109,7 @@ class InvoiceViewModel : ItemViewModel<Invoice>(Invoice()) {
         customer.value = null
         creditAmount.value = null
         totalPrice.value = null
+        payableAmount.value = null
     }
 
     val customerId = bind(Invoice::customerId)
@@ -122,4 +118,5 @@ class InvoiceViewModel : ItemViewModel<Invoice>(Invoice()) {
     var totalPrice = bind(Invoice::productsPrice)
     var creditAmount = bind(Invoice::creditAmount)
     var payableAmount = bind(Invoice::payableAmount)
+    var searchCustomer = bind(Invoice::searchCustomer)
 }

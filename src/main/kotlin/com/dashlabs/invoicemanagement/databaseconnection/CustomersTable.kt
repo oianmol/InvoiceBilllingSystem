@@ -13,6 +13,12 @@ class CustomersTable {
     var customerName: String = ""
 
     @DatabaseField(canBeNull = false)
+    var state: String = ""
+
+    @DatabaseField(canBeNull = false)
+    var district: String = ""
+
+    @DatabaseField(canBeNull = false)
     var dateCreated: Long = 0L
 
     @DatabaseField(canBeNull = false, unique = true)
@@ -36,6 +42,10 @@ class CustomersTable {
             builder.append("Aadhar Card: ${customer.aadharCard}")
             builder.append("\n")
             builder.append("Balance: ${customer.balance}")
+            builder.append("\n")
+            builder.append("State: ${customer.state}")
+            builder.append("\n")
+            builder.append("District: ${customer.district}")
             return builder.toString()
         }
     }

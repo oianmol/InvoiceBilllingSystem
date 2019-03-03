@@ -1,44 +1,57 @@
 package com.dashlabs.invoicemanagement.view.customers
 
+import com.dashlabs.invoicemanagement.State
+import com.dashlabs.invoicemanagement.StateDistrict
 import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
+import com.google.gson.Gson
+import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.layout.VBox
 import javafx.stage.Screen
 import tornadofx.*
+import javax.json.Json
 
 class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedListener? = null) : View("Customers View") {
 
     private val customersViewModel = CustomerViewModel()
     private val customersController: CustomersController by inject()
+    val state = getStates()
+    private var districtView: Field? = null
 
     override val root = hbox {
         this.add(getCustomersView())
-    }
 
-    private fun getCustomersView(): VBox {
-        return vbox {
-            hbox {
-                this.add(getSearchProductForm())
-                this.add(getAddProductView())
-            }
-            tableview<CustomersTable>(customersController.customersListObserver) {
-                this.minWidth = Screen.getPrimary().visualBounds.width
-                column("ID", CustomersTable::customerId)
-                column("Customer Name", CustomersTable::customerName)
-                column("Date Created", CustomersTable::dateCreated)
-                column("Aadhar Card", CustomersTable::aadharCard)
-                column("Balance", CustomersTable::balance)
-                onDoubleClick {
-                    onCustomerSelectedListener?.let {
-                        it.onCustomerSelected(this.selectedItem!!)
-                        currentStage?.close()
-                    }?:kotlin.run {
-                        CustomerDetailView(this.selectedItem!!).openWindow()
-                    }
+        tableview<CustomersTable>(customersController.customersListObserver) {
+            columnResizePolicy = SmartResize.POLICY
+            maxHeight = 300.0
+            hboxConstraints { margin = Insets(20.0,0.0,0.0,0.0)}
+
+            column("ID", CustomersTable::customerId)
+            column("Customer Name", CustomersTable::customerName)
+            column("Date Created", CustomersTable::dateCreated)
+            column("Aadhar Card", CustomersTable::aadharCard)
+            column("Balance", CustomersTable::balance)
+            column("State", CustomersTable::state)
+            column("District", CustomersTable::district)
+
+            onDoubleClick {
+                onCustomerSelectedListener?.let {
+                    it.onCustomerSelected(this.selectedItem!!)
+                    currentStage?.close()
+                } ?: kotlin.run {
+                    CustomerDetailView(this.selectedItem!!).openWindow()
                 }
             }
         }
     }
+
+    private fun getCustomersView(): VBox {
+        return vbox {
+            this.add(getSearchProductForm())
+            this.add(getAddProductView())
+        }
+    }
+
 
     private fun getAddProductView(): VBox {
         return vbox {
@@ -58,14 +71,6 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
                         }
                     }
 
-                    field("Age") {
-                        textfield(customersViewModel.age) {
-                            this.filterInput { it.controlNewText.isInt() }
-                        }.validator {
-                            if (it.isNullOrBlank()) error("Please enter Age") else null
-                        }
-                    }
-
 
                     field("Amount") {
                         textfield(customersViewModel.balance) {
@@ -74,13 +79,29 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
                             if (it.isNullOrBlank()) error("Please specify amount!") else null
                         }
                     }
+
+                    field("State") {
+                        combobox(customersViewModel.state, state.map { it.state }) {
+                            selectionModel.selectedIndex
+                        }.validator {
+                            if (it.isNullOrBlank()) error("Please select the state") else null
+                        }
+                    }
+
+                    customersViewModel.state.onChange {
+                        this@CustomersView.districtView?.let {
+                            customersViewModel.district.value = null
+                            it.removeFromParent()
+                        }
+                        getDistrictView(this@fieldset)
+                    }
                 }
 
 
 
                 button("Add Customer") {
                     setOnMouseClicked {
-                        customersController.addCustomer(customersViewModel.customerName, customersViewModel.aadharNumber, customersViewModel.age, customersViewModel.balance)
+                        customersController.addCustomer(customersViewModel.customerName, customersViewModel.aadharNumber, customersViewModel.balance,customersViewModel.state,customersViewModel.district)
                     }
                 }
             }
@@ -88,8 +109,28 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
         }
     }
 
+    private fun getDistrictView(it: Fieldset) {
+        this@CustomersView.districtView = field("District") {
+            tag = "district"
+            val state = state.firstOrNull { it.state.equals(customersViewModel.state.value) }
+            state?.let {
+                combobox(customersViewModel.district, state.districts).validator {
+                    if (it.isNullOrBlank()) error("Please select the District!") else null
+                }
+            }
+        }
+        this@CustomersView.districtView?.addTo(it)
+    }
+
+    private fun getStates(): List<State> {
+        val stream = javaClass.getResourceAsStream("/states-and-districts.json")
+        val state = Gson().fromJson(Json.createReader(stream).readObject().toPrettyString(), StateDistrict::class.java)
+        return state.states
+    }
+
     private fun getSearchProductForm(): VBox {
         return vbox {
+            vboxConstraints { margin = Insets(20.0,0.0,20.0,0.0) }
             form {
                 fieldset {
                     field("Search Customers") {

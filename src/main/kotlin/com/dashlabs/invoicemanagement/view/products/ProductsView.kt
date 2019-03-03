@@ -2,13 +2,12 @@ package com.dashlabs.invoicemanagement.view.products
 
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
 import com.dashlabs.invoicemanagement.view.customers.OnProductSelectedListener
+import javafx.beans.binding.Bindings
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.TableView
 import javafx.scene.layout.VBox
-import javafx.stage.Screen
 import tornadofx.*
-import java.util.*
 
 class ProductsView(private val onProductSelectedListener: OnProductSelectedListener? = null) : View("Products View") {
 
@@ -17,16 +16,8 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
 
     override val root = hbox {
         this.add(getProductsView())
-    }
 
-    private var selectionModel: TableView.TableViewSelectionModel<ProductsTable>? = null
-
-    private fun getProductsView(): VBox {
-        return vbox {
-            hbox {
-                this.add(getSearchProductForm())
-                this.add(getAddProductView())
-            }
+        vbox {
             onProductSelectedListener?.let {
                 this.add(button("Select Products") {
                     vboxConstraints {
@@ -42,7 +33,9 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
             }
 
             tableview<ProductsTable>(productsController.productsListObserver) {
-                this.minWidth = Screen.getPrimary().visualBounds.width
+                columnResizePolicy = SmartResize.POLICY
+                maxHeight = 300.0
+                vboxConstraints { margin = Insets(20.0) }
                 column("ID", ProductsTable::productId)
                 column("Product Name", ProductsTable::productName)
                 column("Amount", ProductsTable::amount)
@@ -50,6 +43,18 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
                     multiSelect(enable = true)
                     this@ProductsView.selectionModel = selectionModel
                 }
+            }
+        }
+    }
+
+    private var selectionModel: TableView.TableViewSelectionModel<ProductsTable>? = null
+
+    private fun getProductsView(): VBox {
+        return vbox {
+            hboxConstraints { margin = Insets(20.0) }
+            vbox {
+                this.add(getSearchProductForm())
+                this.add(getAddProductView())
             }
         }
     }
@@ -103,7 +108,6 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
                     }
                 }
             }
-
         }
     }
 

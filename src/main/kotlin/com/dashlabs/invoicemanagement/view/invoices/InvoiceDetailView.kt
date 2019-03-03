@@ -37,8 +37,10 @@ class InvoiceDetailView(selectedItem: InvoiceTable, customer: CustomersTable) : 
         }
 
         tableview(obsProducts) {
-            this.minWidth = Screen.getPrimary().visualBounds.width / 3
             tag = "products"
+            columnResizePolicy = SmartResize.POLICY
+            maxHeight = 300.0
+            vboxConstraints { margin = Insets(20.0) }
             vboxConstraints { margin = Insets(10.0) }
             column("ID", ProductsTable::productId)
             column("Product Name", ProductsTable::productName)
