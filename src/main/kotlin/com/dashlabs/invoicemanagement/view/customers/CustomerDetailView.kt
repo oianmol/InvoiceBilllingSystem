@@ -33,7 +33,7 @@ class CustomerDetailView(selectedItem: CustomersTable) : View("${selectedItem.cu
             vboxConstraints { margin = Insets(10.0) }
         }
 
-        if (selectedItem.balance > 0) {
+        /*if (selectedItem.balance > 0) {
             button {
                 vboxConstraints { margin = Insets(10.0) }
                 text = "Pay full pending amount! ${selectedItem.balance}"
@@ -65,7 +65,7 @@ class CustomerDetailView(selectedItem: CustomersTable) : View("${selectedItem.cu
                     }
                 }
             }
-        }
+        }*/
 
         tableview<InvoiceTable>(invoicesController.invoicesListObserver) {
             columnResizePolicy = SmartResize.POLICY
@@ -75,6 +75,8 @@ class CustomerDetailView(selectedItem: CustomersTable) : View("${selectedItem.cu
             column("Invoice Id", InvoiceTable::invoiceId)
             column("Date Modified", InvoiceTable::dateModified)
             column("Customer Id", InvoiceTable::customerId)
+            column("Amount Paid",InvoiceTable::amountPaid)
+            column("Amount Total",InvoiceTable::amountTotal)
             onDoubleClick {
                 showInvoiceDetails(invoicesController.invoicesListObserver.value[this.selectedCell!!.row])
             }
@@ -118,7 +120,7 @@ class CustomerDetailView(selectedItem: CustomersTable) : View("${selectedItem.cu
         Single.fromCallable {
             val customer = Database.getCustomer(selectedItem.customerId)
             customer?.let {
-                it.balance = it.balance.minus(deductValue)
+                //it.balance = it.balance.minus(deductValue)
                 Database.updateCustomer(customer)
             }
         }.subscribeOn(Schedulers.io())

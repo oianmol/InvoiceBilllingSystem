@@ -73,6 +73,7 @@ class InvoicesController : Controller() {
                 invoice.customerId = invoiceViewModel.customerId.value
                 invoice.productsList = invoiceViewModel.productsList.value
                 invoice.creditAmount = invoiceViewModel.creditAmount.value
+                invoice.productsPrice = invoiceViewModel.totalPrice.value
                 var products = hashMapOf<ProductsTable, Int>()
                 productsListObserver.value.forEach {
                     products[it.key] = it.value

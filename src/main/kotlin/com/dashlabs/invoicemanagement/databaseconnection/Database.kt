@@ -172,6 +172,7 @@ object Database {
         invoiceTable.dateCreated = System.currentTimeMillis()
         invoiceTable.dateModified = System.currentTimeMillis()
         invoiceTable.amountTotal = invoice.productsPrice.toDouble()
+
         invoice.creditAmount?.let {
             if (it.toDouble() > 0) {
                 invoiceTable.amountPaid = invoiceTable.amountTotal.minus(invoice.creditAmount.toDouble())
