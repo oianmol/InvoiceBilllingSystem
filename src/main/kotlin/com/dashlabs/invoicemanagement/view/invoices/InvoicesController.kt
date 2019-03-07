@@ -77,7 +77,7 @@ class InvoicesController : Controller() {
                 productsListObserver.value.forEach {
                     products[it.key] = it.value
                 }
-                Database.createInvoice(invoice,products)?.let { it1 -> it.onSuccess(it1) }
+                Database.createInvoice(invoice)?.let { it1 -> it.onSuccess(it1) }
             } catch (ex: Exception) {
                 ex.printStackTrace()
                 it.onError(ex)

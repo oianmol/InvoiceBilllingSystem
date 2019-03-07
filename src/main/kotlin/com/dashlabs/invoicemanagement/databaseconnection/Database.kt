@@ -13,7 +13,6 @@ import java.io.File
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
-import kotlin.collections.HashMap
 
 object Database {
 
@@ -119,9 +118,9 @@ object Database {
         val customersTable = CustomersTable()
         customersTable.customerName = customer.name
         customersTable.dateCreated = System.currentTimeMillis()
-        customersTable.aadharCard = customer.aadhar.toString()
+        customersTable.address = customer.address.toString()
         customersTable.dateModified = System.currentTimeMillis()
-        customersTable.balance = customer.balance.toDouble()
+        customersTable.mobileNumber = customer.mobileno
         customersTable.district = customer.district
         customersTable.state = customer.state
         // persist the account object to the database
@@ -159,30 +158,27 @@ object Database {
         return invoicesDao?.queryForAll()
     }
 
-    fun listInvoices(customerId:Long): List<InvoiceTable>? {
+    fun listInvoices(customerId: Long): List<InvoiceTable>? {
         return invoicesDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()
     }
 
     fun listInvoices(startTime: LocalDateTime, endTime: LocalDateTime): List<InvoiceTable>? {
-        return invoicesDao?.queryBuilder()?.where()?.between(InvoiceTable::dateModified.name,startTime.toEpochSecond(OffsetDateTime.now().offset).times(1000),endTime.toEpochSecond(OffsetDateTime.now().offset).times(1000))?.query()
+        return invoicesDao?.queryBuilder()?.where()?.between(InvoiceTable::dateModified.name, startTime.toEpochSecond(OffsetDateTime.now().offset).times(1000), endTime.toEpochSecond(OffsetDateTime.now().offset).times(1000))?.query()
     }
 
-    fun createInvoice(invoice: Invoice, products: HashMap<ProductsTable, Int>): InvoiceTable? {
+    fun createInvoice(invoice: Invoice): InvoiceTable? {
         val invoiceTable = InvoiceTable()
         invoiceTable.customerId = invoice.customerId
         invoiceTable.dateCreated = System.currentTimeMillis()
         invoiceTable.dateModified = System.currentTimeMillis()
+        invoiceTable.amountTotal = invoice.productsPrice.toDouble()
         invoice.creditAmount?.let {
             if (it.toDouble() > 0) {
-                val customer = getCustomer(invoice.customerId)
-                customer?.let {
-                    it.balance += invoice.creditAmount.toDouble()
-                }
-                customerDao?.update(customer)
+                invoiceTable.amountPaid = invoiceTable.amountTotal.minus(invoice.creditAmount.toDouble())
             }
         }
 
-        invoiceTable.productsPurchased = Gson().toJson(invoice.productsList.map { Pair(it.key,it.value) }.toMutableList())
+        invoiceTable.productsPurchased = Gson().toJson(invoice.productsList.map { Pair(it.key, it.value) }.toMutableList())
         // persist the account object to the database
         val id = invoicesDao?.create(invoiceTable)
         connectionSource.close()

@@ -45,15 +45,16 @@ class CustomersController : Controller() {
                 }
     }
 
-    fun addCustomer(customerName: Property<String>, aadharNumber: Property<Number>, balance: Property<Number>, state: Property<String>, district: Property<String>) {
+    fun addCustomer(customerName: Property<String>, address: Property<String>, balance: Property<Number>, state: Property<String>, district: Property<String>, mobile: Property<String>) {
         Single.create<CustomersTable> {
             try {
-                if (customerName.value.isNullOrEmpty() || aadharNumber.value.toInt() == 0 || state.value.isNullOrEmpty() || district.value.isNullOrEmpty()) {
+                if (customerName.value.isNullOrEmpty() || address.value.isNullOrEmpty()|| state.value.isNullOrEmpty() || district.value.isNullOrEmpty()) {
                     it.onError(Exception())
                 } else {
                     val customer = Customer()
                     customer.name = customerName.value
-                    customer.aadhar = aadharNumber.value
+                    customer.address = address.value
+                    customer.mobileno = mobile.value
                     customer.balance = balance.value
                     customer.state = state.value
                     customer.district  = district.value
@@ -82,7 +83,8 @@ class CustomerViewModel : ItemViewModel<Customer>(Customer()) {
     val customerName = bind(Customer::nameProperty)
     val balance = bind(Customer::balanceProperty)
     val searchName = bind(Customer::searchProperty)
-    val aadharNumber = bind(Customer::aadharProperty)
+    val address = bind(Customer::address)
     val state = bind(Customer::state)
     val district = bind(Customer::districtProperty)
+    val mobile = bind(Customer::mobileno)
 }

@@ -7,7 +7,6 @@ import com.google.gson.Gson
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.layout.VBox
-import javafx.stage.Screen
 import tornadofx.*
 import javax.json.Json
 
@@ -24,13 +23,13 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
         tableview<CustomersTable>(customersController.customersListObserver) {
             columnResizePolicy = SmartResize.POLICY
             maxHeight = 300.0
-            hboxConstraints { margin = Insets(20.0,0.0,0.0,0.0)}
+            hboxConstraints { margin = Insets(20.0, 0.0, 0.0, 0.0) }
 
             column("ID", CustomersTable::customerId)
             column("Customer Name", CustomersTable::customerName)
             column("Date Created", CustomersTable::dateCreated)
-            column("Aadhar Card", CustomersTable::aadharCard)
-            column("Balance", CustomersTable::balance)
+            column("Address", CustomersTable::address)
+            column("Mobile No", CustomersTable::mobileNumber)
             column("State", CustomersTable::state)
             column("District", CustomersTable::district)
 
@@ -63,11 +62,17 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
                         }
                     }
 
-                    field("Aadhar Number") {
-                        textfield(customersViewModel.aadharNumber) {
-                            this.filterInput { it.controlNewText.isLong() }
+                    field("Address") {
+                        textfield(customersViewModel.address) {
                         }.validator {
-                            if (it.isNullOrBlank()) error("Please enter aadhar number!") else null
+                            if (it.isNullOrBlank()) error("Please enter address!") else null
+                        }
+                    }
+
+                    field("Mobile No") {
+                        textfield(customersViewModel.mobile) {
+                        }.validator {
+                            if (it.isNullOrBlank()) error("Please enter Mobile No!") else null
                         }
                     }
 
@@ -101,7 +106,7 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
 
                 button("Add Customer") {
                     setOnMouseClicked {
-                        customersController.addCustomer(customersViewModel.customerName, customersViewModel.aadharNumber, customersViewModel.balance,customersViewModel.state,customersViewModel.district)
+                        customersController.addCustomer(customersViewModel.customerName, customersViewModel.address, customersViewModel.balance, customersViewModel.state, customersViewModel.district,customersViewModel.mobile)
                     }
                 }
             }
@@ -130,7 +135,7 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
 
     private fun getSearchProductForm(): VBox {
         return vbox {
-            vboxConstraints { margin = Insets(20.0,0.0,20.0,0.0) }
+            vboxConstraints { margin = Insets(20.0, 0.0, 20.0, 0.0) }
             form {
                 fieldset {
                     field("Search Customers") {

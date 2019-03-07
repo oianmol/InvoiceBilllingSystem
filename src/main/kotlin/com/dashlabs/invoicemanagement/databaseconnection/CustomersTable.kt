@@ -22,13 +22,13 @@ class CustomersTable {
     var dateCreated: Long = 0L
 
     @DatabaseField(canBeNull = false, unique = true)
-    var aadharCard: String = ""
+    var address: String = ""
+
+    @DatabaseField(canBeNull = false, unique = true)
+    var mobileNumber: String = ""
 
     @DatabaseField(canBeNull = false)
     var dateModified: Long = 0L
-
-    @DatabaseField(canBeNull = false)
-    var balance: Double = 0.0
 
     override fun toString(): String {
         return getFormattedCustomer(this)
@@ -39,9 +39,9 @@ class CustomersTable {
             val builder = StringBuilder()
             builder.append("Name: ${customer.customerName}")
             builder.append("\n")
-            builder.append("Aadhar Card: ${customer.aadharCard}")
+            builder.append("Address: ${customer.address}")
             builder.append("\n")
-            builder.append("Balance: ${customer.balance}")
+            builder.append("Mobile No: ${customer.mobileNumber}")
             builder.append("\n")
             builder.append("State: ${customer.state}")
             builder.append("\n")
