@@ -182,6 +182,7 @@ class InvoicesView : View("Invoices View") {
                                 }
                                 invoiceViewModel.totalPrice.value = currentList.map { it.key.amount * it.value }?.sum().toString()
                                 invoiceViewModel.payableAmount.value = currentList.map { it.key.amount * it.value }?.sum().toString()
+                                invoiceViewModel.productsList.value = currentList
                                 invoicesController.updateProductsObserver(currentList)
                             }
                         }).openWindow()

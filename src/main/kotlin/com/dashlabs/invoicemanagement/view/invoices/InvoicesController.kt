@@ -1,5 +1,6 @@
 package com.dashlabs.invoicemanagement.view.invoices
 
+import com.dashlabs.invoicemanagement.InvoiceGenerator
 import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
 import com.dashlabs.invoicemanagement.databaseconnection.Database
 import com.dashlabs.invoicemanagement.databaseconnection.InvoiceTable
@@ -12,16 +13,18 @@ import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleMapProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
-import javafx.collections.ObservableList
 import javafx.collections.ObservableMap
+import javafx.stage.FileChooser
 import org.sqlite.util.StringUtils
 import tornadofx.*
+import java.io.File
+import java.nio.file.Files
 import java.time.LocalDateTime
 
 class InvoicesController : Controller() {
 
     val invoicesListObserver = SimpleListProperty<InvoiceTable>()
-    val productsListObserver = SimpleMapProperty<ProductsTable,Int>()
+    val productsListObserver = SimpleMapProperty<ProductsTable, Int>()
     var productslist = SimpleStringProperty()
 
     fun requestForInvoices() {
@@ -34,12 +37,12 @@ class InvoicesController : Controller() {
     }
 
 
-    fun updateProductsObserver(productsTable: ObservableMap<ProductsTable,Int>?) {
+    fun updateProductsObserver(productsTable: ObservableMap<ProductsTable, Int>?) {
         runLater {
             productsTable?.let {
                 this.productsListObserver.set(productsTable)
                 val listedProducts = productsListObserver?.value?.map { it.key.productName + " (${it.key.amount} x " + it.value + ") = ${it.key.amount.times(it.value)}" }
-                productslist.value = StringUtils.join(listedProducts,"\n\n")
+                productslist.value = StringUtils.join(listedProducts, "\n\n")
             } ?: kotlin.run {
                 this.productsListObserver.set(FXCollections.observableHashMap())
             }
@@ -67,6 +70,7 @@ class InvoicesController : Controller() {
         val subscription = Single.create<InvoiceTable> {
             try {
                 val customerId = invoiceViewModel.customerId
+                productsListObserver.map { it.key }.toMutableList()
                 val productsList = invoiceViewModel.productsList
                 val invoice = Invoice()
                 invoice.customerId = customerId.value
@@ -85,10 +89,31 @@ class InvoicesController : Controller() {
                 invoicesListObserver.add(it)
                 print(it)
                 invoiceViewModel.clearValues()
-                updateProductsObserver(null)
+                Single.fromCallable {
+                    val listproducts = productsListObserver?.value?.map { Pair(it.key, it.value) }?.toMutableList()
+                    val file = File("~/invoicedatabase","${it.customerId}-${it.invoiceId}-${it.dateModified}.pdf")
+                    InvoiceGenerator.makePDF(file, it, listproducts!!)
+                    file
+                }.subscribeOn(Schedulers.io()).observeOn(JavaFxScheduler.platform()).subscribe { file, t2 ->
+                    updateProductsObserver(null)
+                    productslist.value = null
+                    val fileChooser = FileChooser()
+                    fileChooser.initialFileName = file.name
+                    val extFilter = FileChooser.ExtensionFilter("PDF files (*.pdf)", "*.pdf")
+                    fileChooser.extensionFilters.add(extFilter)
+                    fileChooser.title = "Save Invoice"
+                    val dest = fileChooser.showSaveDialog(null)
+                    if (dest != null) {
+                        try {
+                            Files.copy(file.toPath(), dest.toPath())
+                        } catch (ex: Exception) {
 
-                find<CustomersView> {
-                    requestForCustomers()
+                        }
+
+                    }
+                    find<CustomersView> {
+                        requestForCustomers()
+                    }
                 }
             }
             t2?.let {

@@ -2,6 +2,7 @@ package com.dashlabs.invoicemanagement.view.invoices
 
 import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
+import javafx.collections.ObservableMap
 import tornadofx.*
 
 class Invoice {
@@ -11,7 +12,7 @@ class Invoice {
     var customer by property<CustomersTable>()
     fun getCustomer() = getProperty(Invoice::customer)
 
-    var productsList by property<HashMap<ProductsTable, Int>>()
+    var productsList by property<ObservableMap<ProductsTable, Int>>()
     fun productsProperty() = getProperty(Invoice::productsList)
 
     var productsPrice by property<String>()
