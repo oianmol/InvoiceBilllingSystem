@@ -1,5 +1,7 @@
 package com.dashlabs.invoicemanagement.view.invoices
 
+import com.dashlabs.WebViewFactory
+import com.dashlabs.invoicemanagement.InvoiceGenerator
 import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
 import com.dashlabs.invoicemanagement.databaseconnection.InvoiceTable
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
@@ -7,6 +9,11 @@ import com.dashlabs.invoicemanagement.view.customers.CustomersView
 import com.dashlabs.invoicemanagement.view.customers.OnCustomerSelectedListener
 import com.dashlabs.invoicemanagement.view.customers.OnProductSelectedListener
 import com.dashlabs.invoicemanagement.view.products.ProductsView
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import io.reactivex.Single
+import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
+import io.reactivex.schedulers.Schedulers
 import javafx.collections.FXCollections
 import javafx.collections.ObservableMap
 import javafx.geometry.Insets
@@ -16,8 +23,18 @@ import javafx.scene.control.ButtonType
 import javafx.scene.control.DatePicker
 import javafx.scene.layout.VBox
 import tornadofx.*
+import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.ArrayList
+import com.sun.javaws.BrowserSupport.showDocument
+import com.sun.deploy.uitoolkit.impl.fx.HostServicesFactory
+import java.net.URISyntaxException
+import java.io.IOException
+import sun.net.www.ParseUtil.toURI
+import java.awt.Desktop
+import java.net.URL
+
 
 class InvoicesView : View("Invoices View") {
 
@@ -72,7 +89,7 @@ class InvoicesView : View("Invoices View") {
                 column("Date Modified", InvoiceTable::dateModified)
                 column("Customer Id", InvoiceTable::customerId)
                 onDoubleClick {
-                    showInvoiceDetails(this.selectedItem)
+                    showInvoiceDetails(invoicesController.invoicesListObserver.value[this.selectedCell!!.row])
                 }
             }
         }
@@ -228,7 +245,27 @@ class InvoicesView : View("Invoices View") {
         selectedItem?.let {
             invoicesController.getCustomerById(selectedItem.customerId).subscribe { t1, t2 ->
                 t1?.let { customer ->
-                    InvoiceDetailView(it, customer).openWindow()
+                    Single.fromCallable {
+                        val list = Gson().fromJson<ArrayList<Pair<ProductsTable, Int>>>(selectedItem.productsPurchased, object : TypeToken<ArrayList<Pair<ProductsTable, Int>>>() {}.type)
+                        val file = File("~/invoicedatabase", "temp.pdf")
+                        file.delete()
+                        file.createNewFile()
+                        InvoiceGenerator.makePDF(file, selectedItem, list.map { Pair(it.first, it.second) }.toMutableList())
+                        file
+                    }.subscribeOn(Schedulers.io()).observeOn(JavaFxScheduler.platform()).subscribe { t1, t2 ->
+                        //val hostServices = HostServicesFactory.getInstance(this@InvoicesView.app)
+                        //hostServices.showDocument("file://$t1.absolutePath")
+
+                        try {
+                            Desktop.getDesktop().browse(URL("file://${t1.absolutePath}").toURI())
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        } catch (e: URISyntaxException) {
+                            e.printStackTrace()
+                        }
+
+                    }
+                    //InvoiceDetailView(it, customer).openWindow()
                 }
             }
         }

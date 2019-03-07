@@ -69,14 +69,15 @@ class InvoicesController : Controller() {
     fun addInvoice(invoiceViewModel: InvoiceViewModel): Single<InvoiceTable> {
         val subscription = Single.create<InvoiceTable> {
             try {
-                val customerId = invoiceViewModel.customerId
-                productsListObserver.map { it.key }.toMutableList()
-                val productsList = invoiceViewModel.productsList
                 val invoice = Invoice()
-                invoice.customerId = customerId.value
-                invoice.productsList = productsList.value
+                invoice.customerId = invoiceViewModel.customerId.value
+                invoice.productsList = invoiceViewModel.productsList.value
                 invoice.creditAmount = invoiceViewModel.creditAmount.value
-                Database.createInvoice(invoice)?.let { it1 -> it.onSuccess(it1) }
+                var products = hashMapOf<ProductsTable, Int>()
+                productsListObserver.value.forEach {
+                    products[it.key] = it.value
+                }
+                Database.createInvoice(invoice,products)?.let { it1 -> it.onSuccess(it1) }
             } catch (ex: Exception) {
                 ex.printStackTrace()
                 it.onError(ex)
@@ -91,14 +92,14 @@ class InvoicesController : Controller() {
                 invoiceViewModel.clearValues()
                 Single.fromCallable {
                     val listproducts = productsListObserver?.value?.map { Pair(it.key, it.value) }?.toMutableList()
-                    val file = File("~/invoicedatabase","${it.customerId}-${it.invoiceId}-${it.dateModified}.pdf")
+                    val file = File("~/invoicedatabase","tempinv.pdf")
                     InvoiceGenerator.makePDF(file, it, listproducts!!)
                     file
                 }.subscribeOn(Schedulers.io()).observeOn(JavaFxScheduler.platform()).subscribe { file, t2 ->
                     updateProductsObserver(null)
                     productslist.value = null
                     val fileChooser = FileChooser()
-                    fileChooser.initialFileName = file.name
+                    fileChooser.initialFileName = "${it.customerId}-${it.invoiceId}-${it.dateModified}.pdf"
                     val extFilter = FileChooser.ExtensionFilter("PDF files (*.pdf)", "*.pdf")
                     fileChooser.extensionFilters.add(extFilter)
                     fileChooser.title = "Save Invoice"
@@ -130,6 +131,15 @@ class InvoicesController : Controller() {
             Database.getCustomer(customerId)
         }.subscribeOn(Schedulers.io())
                 .observeOn(JavaFxScheduler.platform())
+    }
+
+    fun getInvoicesForCustomer(customerId: Long) {
+        val listOfInvoices = Database.listInvoices(customerId)
+        runLater {
+            listOfInvoices?.let {
+                invoicesListObserver.set(FXCollections.observableArrayList(it))
+            }
+        }
     }
 
 }

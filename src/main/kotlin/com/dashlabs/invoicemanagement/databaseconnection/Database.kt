@@ -13,6 +13,7 @@ import java.io.File
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
+import kotlin.collections.HashMap
 
 object Database {
 
@@ -158,11 +159,15 @@ object Database {
         return invoicesDao?.queryForAll()
     }
 
+    fun listInvoices(customerId:Long): List<InvoiceTable>? {
+        return invoicesDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()
+    }
+
     fun listInvoices(startTime: LocalDateTime, endTime: LocalDateTime): List<InvoiceTable>? {
         return invoicesDao?.queryBuilder()?.where()?.between(InvoiceTable::dateModified.name,startTime.toEpochSecond(OffsetDateTime.now().offset).times(1000),endTime.toEpochSecond(OffsetDateTime.now().offset).times(1000))?.query()
     }
 
-    fun createInvoice(invoice: Invoice): InvoiceTable? {
+    fun createInvoice(invoice: Invoice, products: HashMap<ProductsTable, Int>): InvoiceTable? {
         val invoiceTable = InvoiceTable()
         invoiceTable.customerId = invoice.customerId
         invoiceTable.dateCreated = System.currentTimeMillis()
@@ -176,7 +181,8 @@ object Database {
                 customerDao?.update(customer)
             }
         }
-        invoiceTable.productsPurchased = Gson().toJson(invoice.productsList)
+
+        invoiceTable.productsPurchased = Gson().toJson(invoice.productsList.map { Pair(it.key,it.value) }.toMutableList())
         // persist the account object to the database
         val id = invoicesDao?.create(invoiceTable)
         connectionSource.close()
