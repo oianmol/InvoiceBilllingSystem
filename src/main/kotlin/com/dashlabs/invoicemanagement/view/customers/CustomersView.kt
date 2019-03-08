@@ -25,11 +25,9 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
             maxHeight = 300.0
             hboxConstraints { margin = Insets(20.0, 0.0, 0.0, 0.0) }
 
-            column("ID", CustomersTable::customerId)
             column("Customer Name", CustomersTable::customerName)
             column("Date Created", CustomersTable::dateCreated)
             column("Address", CustomersTable::address)
-            column("Mobile No", CustomersTable::mobileNumber)
             column("State", CustomersTable::state)
             column("District", CustomersTable::district)
 
@@ -69,13 +67,6 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
                         }
                     }
 
-                    field("Mobile No") {
-                        textfield(customersViewModel.mobile) {
-                        }.validator {
-                            if (it.isNullOrBlank()) error("Please enter Mobile No!") else null
-                        }
-                    }
-
                     field("State") {
                         combobox(customersViewModel.state, state.map { it.state }) {
                             selectionModel.selectedIndex
@@ -97,7 +88,7 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
 
                 button("Add Customer") {
                     setOnMouseClicked {
-                        customersController.addCustomer(customersViewModel.customerName, customersViewModel.address, customersViewModel.state, customersViewModel.district,customersViewModel.mobile)
+                        customersController.addCustomer(customersViewModel.customerName, customersViewModel.address, customersViewModel.state, customersViewModel.district)
                     }
                 }
             }

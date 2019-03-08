@@ -25,10 +25,6 @@ object InvoiceGenerator {
             val document = Document()
             PdfWriter.getInstance(document, file)
 
-            //Inserting Image in PDF
-            val image = Image.getInstance("src/main/resources/logo.jpg")
-            image.scaleAbsolute(540f, 72f)//image width,height
-
             val irdTable = PdfPTable(2)
             irdTable.addCell(getIRDCell("Invoice No"))
             irdTable.addCell(getIRDCell("Invoice Date"))
@@ -113,7 +109,6 @@ object InvoiceGenerator {
 
             document.open()//PDF document opened........
 
-            document.add(image)
             document.add(irhTable)
             document.add(bill)
             document.add(name)

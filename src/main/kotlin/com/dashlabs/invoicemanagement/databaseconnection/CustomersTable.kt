@@ -21,11 +21,8 @@ class CustomersTable {
     @DatabaseField(canBeNull = false)
     var dateCreated: Long = 0L
 
-    @DatabaseField(canBeNull = false, unique = true)
+    @DatabaseField(canBeNull = false)
     var address: String = ""
-
-    @DatabaseField(canBeNull = false, unique = true)
-    var mobileNumber: String = ""
 
     @DatabaseField(canBeNull = false)
     var dateModified: Long = 0L
@@ -40,8 +37,6 @@ class CustomersTable {
             builder.append("Name: ${customer.customerName}")
             builder.append("\n")
             builder.append("Address: ${customer.address}")
-            builder.append("\n")
-            builder.append("Mobile No: ${customer.mobileNumber}")
             builder.append("\n")
             builder.append("State: ${customer.state}")
             builder.append("\n")

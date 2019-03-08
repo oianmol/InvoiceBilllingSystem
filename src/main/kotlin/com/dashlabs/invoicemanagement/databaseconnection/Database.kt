@@ -120,7 +120,6 @@ object Database {
         customersTable.dateCreated = System.currentTimeMillis()
         customersTable.address = customer.address.toString()
         customersTable.dateModified = System.currentTimeMillis()
-        customersTable.mobileNumber = customer.mobileno
         customersTable.district = customer.district
         customersTable.state = customer.state
         // persist the account object to the database
@@ -204,8 +203,42 @@ object Database {
     }
 
 
-    fun updateCustomer(customer: CustomersTable): Boolean {
-        customerDao?.update(customer)
+    fun updateCustomer(customer: CustomersTable, deductValue: Double): Boolean {
+        var reductionValue = deductValue
+        listInvoices(customer.customerId)?.let {
+            val total = it.map { it.outstandingAmount }.sum()
+            if (total == deductValue) {
+                it.forEach {
+                    it.outstandingAmount = 0.0
+                    invoicesDao?.update(it)
+                }
+            } else {
+                var invoicesWithOut = it.filter {
+                    it.outstandingAmount > 0
+                }
+
+                for (it in invoicesWithOut) {
+                    if (it.outstandingAmount > reductionValue) {
+                        it.outstandingAmount -= reductionValue
+                        reductionValue = 0.0
+                        invoicesDao?.update(it)
+                        break
+                    } else {
+                        if (reductionValue == 0.0) {
+                            break
+                        }
+                        // the deduction amount is greater than current invoice
+                        // take the less out of reduction value
+                        val deductableAmount = Math.min(it.outstandingAmount, reductionValue)
+                        // deduct it from current outstanding
+                        it.outstandingAmount -= deductableAmount
+                        reductionValue -= deductableAmount
+                        invoicesDao?.update(it)
+                    }
+                }
+
+            }
+        }
         return true
     }
 

@@ -15,9 +15,6 @@ class Customer {
     var address by property<String>()
     fun addressProperty() = getProperty(Customer::address)
 
-    var mobileno by property<String>()
-    fun mobileProperty() = getProperty(Customer::mobileno)
-
     var district by property<String>()
     fun districtProperty() = getProperty(Customer::district)
 
