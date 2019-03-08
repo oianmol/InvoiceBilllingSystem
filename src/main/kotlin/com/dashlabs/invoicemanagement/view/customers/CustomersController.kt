@@ -45,7 +45,7 @@ class CustomersController : Controller() {
                 }
     }
 
-    fun addCustomer(customerName: Property<String>, address: Property<String>, balance: Property<Number>, state: Property<String>, district: Property<String>, mobile: Property<String>) {
+    fun addCustomer(customerName: Property<String>, address: Property<String>, state: Property<String>, district: Property<String>, mobile: Property<String>) {
         Single.create<CustomersTable> {
             try {
                 if (customerName.value.isNullOrEmpty() || address.value.isNullOrEmpty()|| state.value.isNullOrEmpty() || district.value.isNullOrEmpty()) {
@@ -55,7 +55,6 @@ class CustomersController : Controller() {
                     customer.name = customerName.value
                     customer.address = address.value
                     customer.mobileno = mobile.value
-                    customer.balance = balance.value
                     customer.state = state.value
                     customer.district  = district.value
                     Database.createCustomer(customer)?.let { it1 -> it.onSuccess(it1) }
@@ -81,7 +80,6 @@ class CustomersController : Controller() {
 
 class CustomerViewModel : ItemViewModel<Customer>(Customer()) {
     val customerName = bind(Customer::nameProperty)
-    val balance = bind(Customer::balanceProperty)
     val searchName = bind(Customer::searchProperty)
     val address = bind(Customer::address)
     val state = bind(Customer::state)

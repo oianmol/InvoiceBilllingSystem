@@ -132,8 +132,13 @@ class InvoicesView : View("Invoices View") {
                     }
                 }.textProperty().addListener { observable, oldValue, newValue ->
                     try {
-                        val bal = invoiceViewModel.totalPrice.value.toDouble().minus(invoiceViewModel.creditAmount.value.toDouble()).toString()
-                        invoiceViewModel.payableAmount.value = bal
+                        newValue.takeIf { !it.isNullOrEmpty() }?.let {
+                            val bal = invoiceViewModel.totalPrice.value.toDouble().minus(it.toDouble()).toString()
+                            invoiceViewModel.payableAmount.value = bal
+                        }?:kotlin.run {
+                            val bal = invoiceViewModel.totalPrice.value.toDouble().toString()
+                            invoiceViewModel.payableAmount.value = bal
+                        }
                     } catch (ex: Exception) {
 
                     }

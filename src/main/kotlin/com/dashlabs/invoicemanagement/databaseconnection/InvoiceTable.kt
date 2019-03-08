@@ -1,5 +1,6 @@
 package com.dashlabs.invoicemanagement.databaseconnection
 
+import com.google.gson.annotations.SerializedName
 import com.j256.ormlite.field.DataType
 import com.j256.ormlite.field.DatabaseField
 import com.j256.ormlite.table.DatabaseTable
@@ -26,7 +27,7 @@ class InvoiceTable {
     var amountTotal: Double = 0.0
 
     @DatabaseField(canBeNull = false)
-    var amountPaid: Double = 0.0
+    var outstandingAmount: Double = 0.0
 
     override fun toString(): String {
         return "$customerId $invoiceId $productsPurchased $dateCreated $dateModified"

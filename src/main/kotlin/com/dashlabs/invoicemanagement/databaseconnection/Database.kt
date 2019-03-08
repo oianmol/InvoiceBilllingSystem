@@ -175,7 +175,7 @@ object Database {
 
         invoice.creditAmount?.let {
             if (it.toDouble() > 0) {
-                invoiceTable.amountPaid = invoiceTable.amountTotal.minus(invoice.creditAmount.toDouble())
+                invoiceTable.outstandingAmount = invoice.creditAmount.toDouble()
             }
         }
 

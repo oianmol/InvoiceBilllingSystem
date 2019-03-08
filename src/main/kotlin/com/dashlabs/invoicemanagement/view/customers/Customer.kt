@@ -12,9 +12,6 @@ class Customer {
     var search by property<String>()
     fun searchProperty() = getProperty(Customer::search)
 
-    var balance by property<Number>()
-    fun balanceProperty() = getProperty(Customer::balance)
-
     var address by property<String>()
     fun addressProperty() = getProperty(Customer::address)
 

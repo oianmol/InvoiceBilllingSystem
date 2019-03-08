@@ -75,9 +75,10 @@ class CustomerDetailView(selectedItem: CustomersTable) : View("${selectedItem.cu
             column("Invoice Id", InvoiceTable::invoiceId)
             column("Date Modified", InvoiceTable::dateModified)
             column("Customer Id", InvoiceTable::customerId)
-            column("Amount Paid",InvoiceTable::amountPaid)
+            column("Outstanding Amount",InvoiceTable::outstandingAmount)
             column("Amount Total",InvoiceTable::amountTotal)
             onDoubleClick {
+
                 showInvoiceDetails(invoicesController.invoicesListObserver.value[this.selectedCell!!.row])
             }
         }

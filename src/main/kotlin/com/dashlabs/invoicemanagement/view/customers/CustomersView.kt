@@ -76,15 +76,6 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
                         }
                     }
 
-
-                    field("Amount") {
-                        textfield(customersViewModel.balance) {
-                            this.filterInput { it.controlNewText.isDouble() }
-                        }.validator {
-                            if (it.isNullOrBlank()) error("Please specify amount!") else null
-                        }
-                    }
-
                     field("State") {
                         combobox(customersViewModel.state, state.map { it.state }) {
                             selectionModel.selectedIndex
@@ -106,7 +97,7 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
 
                 button("Add Customer") {
                     setOnMouseClicked {
-                        customersController.addCustomer(customersViewModel.customerName, customersViewModel.address, customersViewModel.balance, customersViewModel.state, customersViewModel.district,customersViewModel.mobile)
+                        customersController.addCustomer(customersViewModel.customerName, customersViewModel.address, customersViewModel.state, customersViewModel.district,customersViewModel.mobile)
                     }
                 }
             }

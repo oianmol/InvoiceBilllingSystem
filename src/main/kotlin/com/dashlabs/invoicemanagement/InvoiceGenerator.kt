@@ -96,9 +96,12 @@ object InvoiceGenerator {
 
             val accounts = PdfPTable(2)
             accounts.widthPercentage = 100F
-            var subtotal = listproducts.map { it.first.amount.times(it.second) }.sum()
             accounts.addCell(getAccountsCell("Subtotal"))
-            accounts.addCell(getAccountsCellR(subtotal.toString()))
+            accounts.addCell(getAccountsCellR(data.amountTotal.toString()))
+
+            accounts.addCell(getAccountsCell("Outstanding"))
+            accounts.addCell(getAccountsCellR(data.outstandingAmount.toString()))
+
             val summaryR = PdfPCell(accounts)
             summaryR.setColspan(3)
             billTable.addCell(summaryR)
