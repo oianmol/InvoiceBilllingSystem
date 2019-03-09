@@ -1,9 +1,9 @@
 package com.dashlabs.invoicemanagement.databaseconnection
 
-import com.google.gson.annotations.SerializedName
 import com.j256.ormlite.field.DataType
 import com.j256.ormlite.field.DatabaseField
 import com.j256.ormlite.table.DatabaseTable
+import java.util.*
 
 @DatabaseTable(tableName = "invoices")
 class InvoiceTable {
@@ -32,4 +32,26 @@ class InvoiceTable {
     override fun toString(): String {
         return "$customerId $invoiceId $productsPurchased $dateCreated $dateModified"
     }
+
+    fun asMeaningfulInvoice(): MeaningfulInvoice {
+        return MeaningfulInvoice(this.invoiceId.toString(),
+                Date(this.dateModified).toString(),
+                Database.getCustomer(this.customerId)!!.customerName,
+                this.customerId,
+                this.dateModified,
+                this.outstandingAmount,
+                amountTotal,
+                this.productsPurchased,
+                this.amountTotal.minus(this.outstandingAmount).toString())
+    }
+
+    class MeaningfulInvoice(var invoiceId: String,
+                            var dateCreated: String,
+                            var customerName: String,
+                            var customerId: Long,
+                            var dateModified: Long,
+                            var outstandingAmount: Double,
+                            var amountTotal: Double,
+                            var productsPurchased: String,
+                            var paymentReceived:String)
 }

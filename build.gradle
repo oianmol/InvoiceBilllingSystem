@@ -53,6 +53,7 @@ dependencies {
     compile 'org.tensorflow:tensorflow:1.12.0'
     testCompile "org.junit.jupiter:junit-jupiter-api:$junit_version"
     testRuntime "org.junit.jupiter:junit-jupiter-engine:$junit_version"
+    compile 'no.tornado:tornadofx-controlsfx:0.1'
 }
 
 mainClassName = "com.dashlabs.invoicemanagement.app.InvoiceApp"

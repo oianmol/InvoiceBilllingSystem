@@ -22,6 +22,6 @@ class ProductsTable {
     var amount: Double = 0.0
 
     override fun toString(): String {
-        return "$productId $productName $amount $dateCreated $dateModified"
+        return "$productName"
     }
 }

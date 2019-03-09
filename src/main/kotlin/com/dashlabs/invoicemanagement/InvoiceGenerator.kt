@@ -15,7 +15,7 @@ import java.util.*
 
 object InvoiceGenerator {
 
-    fun makePDF(fileName: File, data: InvoiceTable, listproducts: MutableList<Pair<ProductsTable, Int>>): Boolean {
+    fun makePDF(fileName: File, data: InvoiceTable.MeaningfulInvoice, listproducts: MutableList<Pair<ProductsTable, Int>>): Boolean {
         val curDate = Date()
         val format = SimpleDateFormat("dd-MMM-yyy")
         val date = format.format(curDate)
@@ -26,8 +26,8 @@ object InvoiceGenerator {
             PdfWriter.getInstance(document, file)
 
             val irdTable = PdfPTable(2)
-            irdTable.addCell(getIRDCell("Invoice No"))
-            irdTable.addCell(getIRDCell("Invoice Date"))
+            irdTable.addCell(getIRDCell("Quotation No"))
+            irdTable.addCell(getIRDCell("Quotation Date"))
             irdTable.addCell(getIRDCell(data.invoiceId.toString())) // pass invoice number
             irdTable.addCell(getIRDCell(date)) // pass invoice date
 
@@ -36,7 +36,7 @@ object InvoiceGenerator {
 
             irhTable.addCell(getIRHCell("", PdfPCell.ALIGN_RIGHT))
             irhTable.addCell(getIRHCell("", PdfPCell.ALIGN_RIGHT))
-            irhTable.addCell(getIRHCell("Invoice", PdfPCell.ALIGN_RIGHT))
+            irhTable.addCell(getIRHCell("Quotation", PdfPCell.ALIGN_RIGHT))
             irhTable.addCell(getIRHCell("", PdfPCell.ALIGN_RIGHT))
             irhTable.addCell(getIRHCell("", PdfPCell.ALIGN_RIGHT))
 
@@ -82,9 +82,9 @@ object InvoiceGenerator {
             val validity = PdfPTable(1)
             validity.widthPercentage = 100F
             validity.addCell(getValidityCell(" "))
-            validity.addCell(getValidityCell("Warranty"))
-            validity.addCell(getValidityCell(" * Products purchased comes with 1 year national warranty \n   (if applicable)"))
-            validity.addCell(getValidityCell(" * Warranty should be claimed only from the respective manufactures"))
+            validity.addCell(getValidityCell(""))
+            validity.addCell(getValidityCell(""))
+            validity.addCell(getValidityCell(""))
             val summaryL = PdfPCell(validity)
             summaryL.colspan = 3
             summaryL.setPadding(1.0f)
@@ -99,13 +99,13 @@ object InvoiceGenerator {
             accounts.addCell(getAccountsCellR(data.outstandingAmount.toString()))
 
             val summaryR = PdfPCell(accounts)
-            summaryR.setColspan(3)
+            summaryR.colspan = 3
             billTable.addCell(summaryR)
 
             val describer = PdfPTable(1)
-            describer.setWidthPercentage(100F)
+            describer.widthPercentage = 100F
             describer.addCell(getdescCell(" "))
-            describer.addCell(getdescCell("Goods once sold will not be taken back or exchanged || Subject to product justification || Product damage no one responsible || " + " Service only at concarned authorized service centers"))
+            describer.addCell(getdescCell(" "))
 
             document.open()//PDF document opened........
 

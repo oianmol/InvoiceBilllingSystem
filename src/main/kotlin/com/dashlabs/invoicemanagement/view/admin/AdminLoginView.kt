@@ -5,6 +5,7 @@ import com.dashlabs.invoicemanagement.databaseconnection.AdminTable
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import io.reactivex.schedulers.Schedulers
 import javafx.geometry.Orientation
+import javafx.scene.input.KeyCode
 import javafx.scene.layout.Priority
 import tornadofx.*
 
@@ -23,6 +24,13 @@ class AdminLoginView : View("Admin Login!") {
                 passwordfield(adminModel.password).validator {
                     if (it.isNullOrBlank()) error("The password field is required") else null
                 }
+                this.setOnKeyPressed {
+                    when (it.code) {
+                        KeyCode.ENTER -> {
+                            loginNow()
+                        }
+                    }
+                }
             }
 
             hbox {
@@ -32,18 +40,7 @@ class AdminLoginView : View("Admin Login!") {
                         hGrow = Priority.ALWAYS
                     }
                     action {
-                        adminModel.loginUser()
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(JavaFxScheduler.platform())
-                                .subscribe { t1, t2 ->
-                                    t1?.let {
-                                        information("Logged In! ${it.name}")
-                                        onLoginDashboard(it)
-                                    }
-                                    t2?.let {
-                                        it.message?.let { it1 -> information(it1) }
-                                    }
-                                }
+                       loginNow()
                     }
                 }
 
@@ -69,6 +66,21 @@ class AdminLoginView : View("Admin Login!") {
                 }
             }
         }
+    }
+
+    private fun loginNow() {
+        adminModel.loginUser()
+                .subscribeOn(Schedulers.io())
+                .observeOn(JavaFxScheduler.platform())
+                .subscribe { t1, t2 ->
+                    t1?.let {
+                        information("Logged In! ${it.name}")
+                        onLoginDashboard(it)
+                    }
+                    t2?.let {
+                        it.message?.let { it1 -> information(it1) }
+                    }
+                }
     }
 
     private fun onLoginDashboard(it: AdminTable) {

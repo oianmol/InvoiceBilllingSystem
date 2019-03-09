@@ -70,6 +70,22 @@ class ProductsController : Controller() {
                 }
     }
 
+    fun deleteProduct(productId: ProductsTable) {
+        Single.create<Int> {
+            try {
+                Database.deleteProduct(productId)?.let { it1 -> it.onSuccess(it1) }
+            } catch (ex: Exception) {
+                it.onError(ex)
+            }
+        }.subscribeOn(Schedulers.io())
+                .observeOn(JavaFxScheduler.platform())
+                .subscribe { t1, t2 ->
+                    t1?.let {
+                        requestForProducts()
+                    }
+                }
+    }
+
 }
 
 class ProductViewModel : ItemViewModel<Product>(Product()) {

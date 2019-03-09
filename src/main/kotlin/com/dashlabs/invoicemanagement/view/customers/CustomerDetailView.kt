@@ -1,10 +1,9 @@
 package com.dashlabs.invoicemanagement.view.customers
 
 import com.dashlabs.invoicemanagement.InvoiceGenerator
-import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
-import com.dashlabs.invoicemanagement.databaseconnection.Database
-import com.dashlabs.invoicemanagement.databaseconnection.InvoiceTable
-import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
+import com.dashlabs.invoicemanagement.app.savePdf
+import com.dashlabs.invoicemanagement.databaseconnection.*
+import com.dashlabs.invoicemanagement.view.TransactionHistoryView
 import com.dashlabs.invoicemanagement.view.invoices.InvoicesController
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -12,13 +11,13 @@ import io.reactivex.Single
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import io.reactivex.schedulers.Schedulers
 import javafx.geometry.Insets
+import javafx.scene.control.Alert
+import javafx.scene.control.ButtonBar
+import javafx.scene.control.ButtonType
 import javafx.scene.layout.VBox
 import tornadofx.*
 import java.awt.Desktop
 import java.io.File
-import java.io.IOException
-import java.net.URISyntaxException
-import java.net.URL
 import java.util.*
 
 class CustomerDetailView(private val customerData: CustomersTable) : View("${customerData.customerName} Details") {
@@ -31,29 +30,42 @@ class CustomerDetailView(private val customerData: CustomersTable) : View("${cus
     }
 
     override val root = vbox {
-        minHeight = 800.0
         minWidth = 600.0
-        label(customerData.toString()) {
-            vboxConstraints { margin = Insets(10.0) }
-        }
 
-        vbox {
-            vboxConstraints { margin = Insets(10.0) }
-            balanceVbox = this@vbox
+        hbox {
+            vbox {
+                hboxConstraints { margin = Insets(10.0) }
+                button {
+                    vboxConstraints { margin = Insets(10.0) }
+                    text = "Transaction History"
+                    setOnMouseClicked {
+                        TransactionHistoryView(customerData.customerId).openWindow()
+                    }
+                }
+
+                label(customerData.toString()) {
+                    vboxConstraints { margin = Insets(10.0) }
+                }
+            }
+            vbox {
+                hboxConstraints { margin = Insets(10.0) }
+                balanceVbox = this@vbox
+            }
         }
 
         invoicesController.invoicesListObserver.addListener { observable, oldValue, newValue ->
             getOutstandingView()
         }
 
-        tableview<InvoiceTable>(invoicesController.invoicesListObserver) {
+        tableview<InvoiceTable.MeaningfulInvoice>(invoicesController.invoicesListObserver) {
             columnResizePolicy = SmartResize.POLICY
             maxHeight = 300.0
             vboxConstraints { margin = Insets(20.0) }
             tag = "invoices"
-            column("Date Modified", InvoiceTable::dateModified)
-            column("Outstanding Amount", InvoiceTable::outstandingAmount)
-            column("Amount Total", InvoiceTable::amountTotal)
+            column("Bill Date", InvoiceTable.MeaningfulInvoice::dateCreated)
+            column("Bill Amount", InvoiceTable.MeaningfulInvoice::amountTotal)
+            column("Due Amount", InvoiceTable.MeaningfulInvoice::outstandingAmount)
+            column("Received Payment", InvoiceTable.MeaningfulInvoice::paymentReceived)
             onDoubleClick {
                 showInvoiceDetails(invoicesController.invoicesListObserver.value[this.selectedCell!!.row])
             }
@@ -76,20 +88,17 @@ class CustomerDetailView(private val customerData: CustomersTable) : View("${cus
             if (outstanding > 0) {
                 val balanceBox = vbox {
                     tag = "balance"
-                    button {
+                    deductValue = outstanding
+
+                    label {
+                        text = "Total Amount due is $outstanding!"
                         vboxConstraints { margin = Insets(10.0) }
-                        text = "Pay full pending amount! ${outstanding}"
-                        setOnMouseClicked {
-                            deductValue = outstanding
-                            performBalanceReduction(customerData, outstanding)
-                        }
                     }
 
                     label {
-                        text = "Or pay some amount partial amount "
+                        text = "Please enter due amount to pay!"
                         vboxConstraints { margin = Insets(10.0) }
                     }
-                    deductValue = outstanding
 
                     hbox {
                         textfield(outstanding.toString()) {
@@ -98,12 +107,16 @@ class CustomerDetailView(private val customerData: CustomersTable) : View("${cus
                                 it.controlNewText.isDouble() && it.controlNewText.toDouble() <= outstanding
                             }
                         }.textProperty().addListener { observable, oldValue, newValue ->
-                            deductValue = newValue.toDouble()
+                            newValue.takeIf { !it.isNullOrEmpty() }?.let {
+                                deductValue = newValue.toDouble()
+                            } ?: kotlin.run {
+                                deductValue = 0.0
+                            }
                         }
 
                         button {
                             hboxConstraints { margin = Insets(10.0) }
-                            text = "Pay some pending amount from ${outstanding}"
+                            text = "Pay Now!"
                             setOnMouseClicked {
                                 if (deductValue > 0) {
                                     performBalanceReduction(customerData, deductValue)
@@ -120,53 +133,40 @@ class CustomerDetailView(private val customerData: CustomersTable) : View("${cus
         }
     }
 
-    /**
-     * Convert from a filename to a file URL.
-     */
-    private fun convertToFileURL(filename: String): String {
-        // On JDK 1.2 and later, simplify this to:
-        // "path = file.toURL().toString()".
-        var path = File(filename).absolutePath
-        if (File.separatorChar != '/') {
-            path = path.replace(File.separatorChar, '/')
+    private fun showInvoiceDetails(selectedItem: InvoiceTable.MeaningfulInvoice?) {
+        selectedItem?.let {
+            val t1 = generateInvoice(selectedItem).blockingGet()
+            alertUser(t1, selectedItem)
         }
-        if (!path.startsWith("/")) {
-            path = "/$path"
-        }
-
-        return "file:$path"
     }
 
-    private fun showInvoiceDetails(selectedItem: InvoiceTable?) {
-        selectedItem?.let {
-
-            invoicesController.getCustomerById(selectedItem.customerId).subscribe { t1, t2 ->
-                t1?.let { customer ->
-                    Single.fromCallable {
-                        val list = Gson().fromJson<ArrayList<Pair<ProductsTable, Int>>>(selectedItem.productsPurchased, object : TypeToken<ArrayList<Pair<ProductsTable, Int>>>() {}.type)
-                        val file = File("~/invoicedatabase", "temp.pdf")
-                        file.delete()
-                        file.createNewFile()
-                        InvoiceGenerator.makePDF(file, selectedItem, list.map { Pair(it.first, it.second) }.toMutableList())
-                        file
-                    }.subscribeOn(Schedulers.io()).observeOn(JavaFxScheduler.platform()).subscribe { t1, t2 ->
-                        //val hostServices = HostServicesFactory.getInstance(this@InvoicesView.app)
-                        //hostServices.showDocument("file://$t1.absolutePath")
-                        t1?.let {
-                            try {
-                                Desktop.getDesktop().browse(URL(convertToFileURL(t1.absolutePath)).toURI())
-                            } catch (e: IOException) {
-                                e.printStackTrace()
-                            } catch (e: URISyntaxException) {
-                                e.printStackTrace()
-                            }
-                        }
-
-                    }
-                    //InvoiceDetailView(it, customer).openWindow()
+    private fun alertUser(t1: File, selectedItem: InvoiceTable.MeaningfulInvoice) {
+        alert(Alert.AlertType.INFORMATION, "Invoice Information",
+                "View invoice or Save It",
+                buttons = *arrayOf(ButtonType("Save", ButtonBar.ButtonData.BACK_PREVIOUS),
+                        ButtonType("Preview", ButtonBar.ButtonData.NEXT_FORWARD)), owner = currentWindow, title = "Hey!") {
+            when {
+                it.buttonData == ButtonBar.ButtonData.NEXT_FORWARD -> try {
+                    Desktop.getDesktop().browse(t1.toURI())
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
+                it.buttonData == ButtonBar.ButtonData.BACK_PREVIOUS -> savePdf(selectedItem, t1)
             }
         }
+    }
+
+    private fun generateInvoice(selectedItem: InvoiceTable.MeaningfulInvoice): Single<File> {
+        return Single.fromCallable {
+            val list = Gson().fromJson<ArrayList<Pair<ProductsTable, Int>>>(
+                    selectedItem.productsPurchased,
+                    object : TypeToken<ArrayList<Pair<ProductsTable, Int>>>() {}.type)
+            val file = File("~/invoicedatabase", "temp.pdf")
+            file.delete()
+            file.createNewFile()
+            InvoiceGenerator.makePDF(file, selectedItem, list.map { Pair(it.first, it.second) }.toMutableList())
+            file
+        }.subscribeOn(Schedulers.io()).observeOn(JavaFxScheduler.platform())
     }
 
 
@@ -175,6 +175,12 @@ class CustomerDetailView(private val customerData: CustomersTable) : View("${cus
             val customer = Database.getCustomer(selectedItem.customerId)
             customer?.let {
                 Database.updateCustomer(customer, deductValue)
+
+                val transactionTable = TransactionTable()
+                transactionTable.dateCreated = System.currentTimeMillis()
+                transactionTable.customerId = selectedItem.customerId
+                transactionTable.deduction = deductValue
+                Database.createTransaction(transactionTable)
             }
         }.subscribeOn(Schedulers.io())
                 .observeOn(JavaFxScheduler.platform()).subscribe { t1, t2 ->

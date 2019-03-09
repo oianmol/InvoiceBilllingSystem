@@ -13,15 +13,18 @@ class DashboardController : Controller() {
     var status by statusProperty
 
 
-    val admingSettingsProperty = SimpleStringProperty("Admin Login!")
+    val admingSettingsProperty = SimpleStringProperty("Login..")
     var admingSettings by admingSettingsProperty
 
     val adminLogin = SimpleBooleanProperty(false)
     var isAdminLogin by adminLogin
 
+    lateinit var admin: Admin
+
     fun adminLoggedin(admin: Admin) {
+        this.admin = admin
         runLater { status = "Welcome ${admin.username} !" }
-        runLater { admingSettings = "Admin Settings" }
+        runLater { admingSettings = "Change Password" }
         runLater { isAdminLogin = true }
     }
 

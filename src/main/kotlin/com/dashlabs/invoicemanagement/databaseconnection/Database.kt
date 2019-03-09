@@ -1,6 +1,7 @@
 package com.dashlabs.invoicemanagement.databaseconnection
 
 import com.dashlabs.invoicemanagement.view.admin.Admin
+import com.dashlabs.invoicemanagement.view.admin.AdminModel
 import com.dashlabs.invoicemanagement.view.customers.Customer
 import com.dashlabs.invoicemanagement.view.invoices.Invoice
 import com.dashlabs.invoicemanagement.view.products.Product
@@ -12,7 +13,6 @@ import com.j256.ormlite.table.TableUtils
 import java.io.File
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.util.*
 
 object Database {
 
@@ -26,6 +26,8 @@ object Database {
 
     private var invoicesDao: Dao<InvoiceTable, *>?
 
+    private var transactionsDao: Dao<TransactionTable, *>?
+
     init {
         connectionSource = getDatabaseConnection()
 
@@ -33,12 +35,14 @@ object Database {
         TableUtils.createTableIfNotExists(connectionSource, ProductsTable::class.java)
         TableUtils.createTableIfNotExists(connectionSource, CustomersTable::class.java)
         TableUtils.createTableIfNotExists(connectionSource, InvoiceTable::class.java)
+        TableUtils.createTableIfNotExists(connectionSource, TransactionTable::class.java)
 
         // instantiate the DAO to handle Account with String id
         accountDao = DaoManager.createDao(connectionSource, AdminTable::class.java)
         productsDao = DaoManager.createDao(connectionSource, ProductsTable::class.java)
         customerDao = DaoManager.createDao(connectionSource, CustomersTable::class.java)
         invoicesDao = DaoManager.createDao(connectionSource, InvoiceTable::class.java)
+        transactionsDao = DaoManager.createDao(connectionSource, TransactionTable::class.java)
 
     }
 
@@ -65,6 +69,31 @@ object Database {
 
     }
 
+    fun changePassword(admin: Admin, adminModel: AdminModel): AdminTable? {
+        checkAdminExists(admin)?.let {
+            // persist the account object to the database
+            // create an instance of Account
+            val adminTable = AdminTable()
+            adminTable.name = admin.username
+            adminTable.password = adminModel.newpassword.value
+
+            val id = accountDao?.update(adminTable)
+            connectionSource.close()
+
+            id?.let {
+                return if (it > 0) {
+                    adminTable
+                } else {
+                    null
+                }
+            } ?: kotlin.run {
+                return null
+            }
+        } ?: kotlin.run {
+            return null
+        }
+    }
+
     private fun getDatabaseConnection(): JdbcConnectionSource {
         Class.forName("org.sqlite.JDBC")
         val directory = File("~/invoicedatabase")
@@ -74,14 +103,38 @@ object Database {
     }
 
     fun checkAdminExists(admin: Admin): AdminTable? {
-        val adminTable = AdminTable()
-        adminTable.name = admin.username
-        adminTable.password = admin.password
-        var list = accountDao?.queryForMatchingArgs(adminTable)
-        connectionSource.close()
-        return list?.let {
-            return if (it.size > 0) {
-                it.first()
+        try {
+            val adminTable = AdminTable()
+            adminTable.name = admin.username
+            adminTable.password = admin.password
+            var list = accountDao?.queryForMatchingArgs(adminTable)
+            connectionSource.close()
+            return list?.let {
+                return if (it.size > 0) {
+                    it.first()
+                } else {
+                    null
+                }
+            } ?: kotlin.run {
+                return null
+            }
+        } catch (ex: Exception) {
+            return null
+        }
+
+    }
+
+    fun deleteProduct(productId: ProductsTable): Int? {
+        return productsDao?.delete(productId)
+    }
+
+    fun createTransaction(transactionTable: TransactionTable): TransactionTable? {
+        val id = transactionsDao?.create(transactionTable)
+        connectionSource?.close()
+
+        id?.let {
+            return if (it > 0) {
+                transactionTable
             } else {
                 null
             }
@@ -153,19 +206,42 @@ object Database {
         }
     }
 
-    fun listInvoices(): List<InvoiceTable>? {
-        return invoicesDao?.queryForAll()
+    fun listCustomers(state: String,district:String): List<CustomersTable>? {
+        return customerDao?.queryBuilder()
+                ?.where()
+                ?.like(CustomersTable::state.name, state)?.and()
+                ?.like(CustomersTable::district.name, district)
+                ?.query()
     }
 
-    fun listInvoices(customerId: Long): List<InvoiceTable>? {
-        return invoicesDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()
+    fun listInvoices(): List<InvoiceTable.MeaningfulInvoice>? {
+        val invoices = invoicesDao?.queryForAll()
+        return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }
     }
 
-    fun listInvoices(startTime: LocalDateTime, endTime: LocalDateTime): List<InvoiceTable>? {
-        return invoicesDao?.queryBuilder()?.where()?.between(InvoiceTable::dateModified.name, startTime.toEpochSecond(OffsetDateTime.now().offset).times(1000), endTime.toEpochSecond(OffsetDateTime.now().offset).times(1000))?.query()
+    fun listTransactions(customerId: Long): List<TransactionTable.MeaningfulTransaction>? {
+        val invoices = transactionsDao?.queryBuilder()?.where()
+                ?.like(CustomersTable::customerId.name, customerId)
+                ?.query()
+        return invoices?.sortedByDescending { it.dateCreated }?.map { it.toMeaningfulTransaction(it) }
     }
 
-    fun createInvoice(invoice: Invoice): InvoiceTable? {
+    fun listInvoices(customerId: Long): List<InvoiceTable.MeaningfulInvoice>? {
+        val invoices = invoicesDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()
+        return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }
+    }
+
+    fun listInvoicesSimple(customerId: Long): List<InvoiceTable>? {
+        val invoices = invoicesDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()
+        return invoices?.sortedByDescending { it.dateModified }
+    }
+
+    fun listInvoices(startTime: LocalDateTime, endTime: LocalDateTime): List<InvoiceTable.MeaningfulInvoice>? {
+        val invoices = invoicesDao?.queryBuilder()?.where()?.between(InvoiceTable::dateModified.name, startTime.toEpochSecond(OffsetDateTime.now().offset).times(1000), endTime.toEpochSecond(OffsetDateTime.now().offset).times(1000))?.query()
+        return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }
+    }
+
+    fun createInvoice(invoice: Invoice): InvoiceTable.MeaningfulInvoice? {
         val invoiceTable = InvoiceTable()
         invoiceTable.customerId = invoice.customerId
         invoiceTable.dateCreated = System.currentTimeMillis()
@@ -178,14 +254,14 @@ object Database {
             }
         }
 
-        invoiceTable.productsPurchased = Gson().toJson(invoice.productsList.map { Pair(it.key, it.value) }.toMutableList())
+        invoiceTable.productsPurchased = Gson().toJson(invoice.productsList.map { Pair(it.productsTable, it.quantity.toInt()) }.toMutableList())
         // persist the account object to the database
         val id = invoicesDao?.create(invoiceTable)
         connectionSource.close()
 
         id?.let {
             return if (it > 0) {
-                invoiceTable
+                invoiceTable.asMeaningfulInvoice()
             } else {
                 null
             }
@@ -205,7 +281,8 @@ object Database {
 
     fun updateCustomer(customer: CustomersTable, deductValue: Double): Boolean {
         var reductionValue = deductValue
-        listInvoices(customer.customerId)?.let {
+
+        listInvoicesSimple(customer.customerId)?.let {
             val total = it.map { it.outstandingAmount }.sum()
             if (total == deductValue) {
                 it.forEach {
@@ -213,7 +290,7 @@ object Database {
                     invoicesDao?.update(it)
                 }
             } else {
-                var invoicesWithOut = it.filter {
+                val invoicesWithOut = it.filter {
                     it.outstandingAmount > 0
                 }
 
@@ -242,10 +319,4 @@ object Database {
         return true
     }
 
-}
-
-fun <E> MutableList<E>.asArrayList(): ArrayList<E>? {
-    val arrayList = ArrayList<E>()
-    arrayList.addAll(this)
-    return arrayList
 }

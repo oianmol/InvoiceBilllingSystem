@@ -9,6 +9,7 @@ class AdminModel : ItemViewModel<Admin>(Admin()) {
 
     val username = bind(Admin::nameProperty)
     val password = bind(Admin::passwordProperty)
+    val newpassword = bind(Admin::passwordProperty)
 
     fun loginUser(): Single<AdminTable> {
         return Single.create<AdminTable> {
@@ -21,6 +22,22 @@ class AdminModel : ItemViewModel<Admin>(Admin()) {
                     it.onSuccess(admin)
                 } ?: kotlin.run {
                     it.onError(Exception("User ${admin.username} doesn't exist"))
+                }
+            } catch (ex: Exception) {
+                it.onError(ex)
+            }
+
+        }
+    }
+
+    fun changePassword(adminTable: Admin, adminModel: AdminModel): Single<AdminTable> {
+        return Single.create<AdminTable> {
+            try {
+                val adminTable = Database.changePassword(adminTable,adminModel)
+                adminTable?.let { admin ->
+                    it.onSuccess(admin)
+                } ?: kotlin.run {
+                    it.onError(Exception("User ${adminModel.username} doesn't exist"))
                 }
             } catch (ex: Exception) {
                 it.onError(ex)

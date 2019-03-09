@@ -2,12 +2,16 @@ package com.dashlabs.invoicemanagement.view.dashboard
 
 import com.dashlabs.invoicemanagement.app.InvoiceApp
 import com.dashlabs.invoicemanagement.view.admin.AdminLoginView
+import com.dashlabs.invoicemanagement.view.admin.ChangePasswordView
 import com.dashlabs.invoicemanagement.view.customers.CustomersView
+import com.dashlabs.invoicemanagement.view.customers.SearchCustomerView
 import com.dashlabs.invoicemanagement.view.invoices.InvoicesView
+import com.dashlabs.invoicemanagement.view.invoices.SearchInvoiceView
 import com.dashlabs.invoicemanagement.view.products.ProductsView
 import javafx.geometry.Insets
 import javafx.geometry.Pos
-import javafx.scene.control.TabPane
+import javafx.geometry.Side
+import javafx.scene.input.KeyCode
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
@@ -17,17 +21,19 @@ import tornadofx.*
 class DashboardView : View("Dashboard") {
 
     private val dashboardController: DashboardController by inject()
-    private var tabNames: ArrayList<String> = arrayListOf("Products", "Customers", "Invoices")
+    private var tabNames: ArrayList<String> = arrayListOf("Products [1]", "Customers [2]", "Create Invoice [3]", "Invoice Search [4]","Area Wise Customer's Search[5]")
     private var productsView: ProductsView = ProductsView()
     private var customersView: CustomersView = CustomersView()
     private var invoicesView = InvoicesView()
-
+    private var invoicesSearchView = SearchInvoiceView()
+    private var customerSearch = SearchCustomerView()
     init {
         subscribe<InvoiceApp.AdminLoggedInEvent> {
             dashboardController.adminLoggedin(it.admin)
             productsView.requestForProducts()
             customersView.requestForCustomers()
             invoicesView.requestForInvoices()
+            invoicesSearchView.requestForInvoices()
             println("User logged in! ${it.admin.username}")
         }
     }
@@ -48,11 +54,6 @@ class DashboardView : View("Dashboard") {
         return vbox {
             this.vgrow = Priority.ALWAYS
             hbox {
-                label("Company Name \nRoad no.12 Banjara Hills\nHyderabad 500034") {
-                    alignment = Pos.TOP_LEFT
-                    paddingAll = 10.0
-                    HBox.setMargin(this, Insets(10.0))
-                }
                 label(dashboardController.statusProperty) {
                     alignment = Pos.TOP_RIGHT
                     paddingAll = 10.0
@@ -66,29 +67,60 @@ class DashboardView : View("Dashboard") {
                         hGrow = Priority.ALWAYS
                     }
                     setOnMouseClicked {
-                        if (isAdminLoggedIn()) {
-                            openInternalWindow(AdminSettingsView::class)
-                        } else {
+                        if (!isAdminLoggedIn()) {
                             openInternalWindow(AdminLoginView::class)
+                        } else {
+                            ChangePasswordView(dashboardController.admin).openWindow()
                         }
                     }
                 }
             }
 
 
-            tabpane {
-                tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
+            drawer {
+                this.scene?.setOnKeyPressed {
+                    when (it.code) {
+                        KeyCode.DIGIT1 -> {
+                            this.items[0].expanded = true
+                        }
+                        KeyCode.DIGIT2 -> {
+                            this.items[1].expanded = true
+                        }
+                        KeyCode.DIGIT3 -> {
+                            this.items[2].expanded = true
+                        }
+                        KeyCode.DIGIT4 -> {
+                            this.items[3].expanded = true
+                        }
+                        KeyCode.DIGIT5 -> {
+                            this.items[4].expanded = true
+                        }
+                        else -> {
+                        }
+                    }
+                }
+
+
+                minWidth = 1200.0
+                minHeight = 628.0
+                dockingSide = Side.TOP
                 enableWhen(dashboardController.adminLogin)
-                tab(tabNames[0]) {
+                item(tabNames[0], expanded = true) {
                     this.add(productsView)
                 }
 
-                tab(tabNames[1]) {
+                item(tabNames[1]) {
                     this.add(customersView)
                 }
 
-                tab(tabNames[2]) {
+                item(tabNames[2]) {
                     this.add(invoicesView)
+                }
+                item(tabNames[3]) {
+                    this.add(invoicesSearchView)
+                }
+                item(tabNames[4]) {
+                    this.add(customerSearch)
                 }
             }
         }

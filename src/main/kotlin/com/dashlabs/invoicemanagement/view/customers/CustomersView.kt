@@ -22,11 +22,9 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
 
         tableview<CustomersTable>(customersController.customersListObserver) {
             columnResizePolicy = SmartResize.POLICY
-            maxHeight = 300.0
             hboxConstraints { margin = Insets(20.0, 0.0, 0.0, 0.0) }
 
             column("Customer Name", CustomersTable::customerName)
-            column("Date Created", CustomersTable::dateCreated)
             column("Address", CustomersTable::address)
             column("State", CustomersTable::state)
             column("District", CustomersTable::district)
