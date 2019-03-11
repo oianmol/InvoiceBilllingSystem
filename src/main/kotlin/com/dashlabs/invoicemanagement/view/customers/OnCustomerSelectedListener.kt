@@ -5,7 +5,7 @@ import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
 import javafx.collections.ObservableMap
 
 interface OnCustomerSelectedListener {
-    fun onCustomerSelected(customersTable: CustomersTable)
+    fun onCustomerSelected(customersTable: CustomersTable.MeaningfulCustomer)
 }
 
 interface OnProductSelectedListener {

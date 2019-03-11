@@ -31,6 +31,22 @@ class CustomersTable {
         return getFormattedCustomer(this)
     }
 
+    class MeaningfulCustomer(var customerName: String, var address: String, var state: String, var district: String, var amountDue: String,var customerId: Long){
+        override fun toString(): String {
+            return this.let {
+                val builder = StringBuilder()
+                builder.append("Name: ${customerName}")
+                builder.append("\n")
+                builder.append("Address: ${address}")
+                builder.append("\n")
+                builder.append("State: ${state}")
+                builder.append("\n")
+                builder.append("District: ${district}")
+                return builder.toString()
+            }
+        }
+    }
+
     private fun getFormattedCustomer(customer: CustomersTable): String {
         customer.let {
             val builder = StringBuilder()

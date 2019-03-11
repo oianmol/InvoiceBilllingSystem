@@ -20,14 +20,14 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
     override val root = hbox {
         this.add(getCustomersView())
 
-        tableview<CustomersTable>(customersController.customersListObserver) {
+        tableview<CustomersTable.MeaningfulCustomer>(customersController.customersListObserver) {
             columnResizePolicy = SmartResize.POLICY
             hboxConstraints { margin = Insets(20.0, 0.0, 0.0, 0.0) }
 
-            column("Customer Name", CustomersTable::customerName)
-            column("Address", CustomersTable::address)
-            column("State", CustomersTable::state)
-            column("District", CustomersTable::district)
+            column("Customer Name", CustomersTable.MeaningfulCustomer::customerName)
+            column("Address", CustomersTable.MeaningfulCustomer::address)
+            column("State", CustomersTable.MeaningfulCustomer::state)
+            column("District", CustomersTable.MeaningfulCustomer::district)
 
             onDoubleClick {
                 onCustomerSelectedListener?.let {

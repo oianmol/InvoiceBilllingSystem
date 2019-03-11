@@ -20,7 +20,7 @@ class InvoicesController : Controller() {
 
 
     val invoicesListObserver = SimpleListProperty<InvoiceTable.MeaningfulInvoice>()
-    val customersListObservable = SimpleListProperty<CustomersTable>()
+    val customersListObservable = SimpleListProperty<CustomersTable.MeaningfulCustomer>()
 
     val transactionListObserver = SimpleListProperty<TransactionTable.MeaningfulTransaction>()
 
@@ -47,18 +47,28 @@ class InvoicesController : Controller() {
     }
 
     fun searchCustomers(state: String, district: String) {
-        Single.create<List<CustomersTable>> {
+        Single.create<List<CustomersTable.MeaningfulCustomer>> { emitter->
             try {
                 val listOfInvoices = Database.listCustomers(state, district)
-                listOfInvoices?.let { it1 -> it.onSuccess(it1) }
+                listOfInvoices?.let {
+                    val customers = listOfInvoices.map { it.toMeaningFulCustomer() }
+                    customers.forEach {
+                        var totalPrice = 0.0
+                        Database.listInvoices(it.customerId)?.map { it.outstandingAmount }?.sum()?.let {
+                            totalPrice += it
+                        }
+                        it.amountDue = totalPrice.toString()
+                    }
+                    emitter.onSuccess(customers)
+                }
             } catch (ex: Exception) {
-                it.onError(ex)
+                emitter.onError(ex)
             }
         }.subscribeOn(Schedulers.io())
                 .observeOn(JavaFxScheduler.platform())
                 .subscribe { t1, t2 ->
                     t1?.let {
-                        customersListObservable.set(FXCollections.observableArrayList<CustomersTable>(it))
+                        customersListObservable.set(FXCollections.observableArrayList<CustomersTable.MeaningfulCustomer>(it))
                     }
                 }
     }
@@ -150,6 +160,10 @@ class InvoicesController : Controller() {
         }
     }
 
+}
+
+fun CustomersTable.toMeaningFulCustomer(): CustomersTable.MeaningfulCustomer {
+    return CustomersTable.MeaningfulCustomer(this.customerName,this.address,this.state,this.district,"",this.customerId)
 }
 
 class InvoiceViewModel : ItemViewModel<Invoice>(Invoice()) {

@@ -9,7 +9,7 @@ import tornadofx.*
 class Invoice {
     var customerId by property<Long>()
 
-    var customer by property<CustomersTable>()
+    var customer by property<CustomersTable.MeaningfulCustomer>()
 
     var productsList by property<ObservableList<InvoicesController.ProductsModel>>()
 

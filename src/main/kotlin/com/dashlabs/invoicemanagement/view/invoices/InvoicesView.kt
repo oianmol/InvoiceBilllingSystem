@@ -38,7 +38,7 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener {
                                 vboxConstraints { margin = Insets(10.0, 0.0, 0.0, 0.0) }
                                 setOnMouseClicked {
                                     CustomersView(onCustomerSelectedListener = object : OnCustomerSelectedListener {
-                                        override fun onCustomerSelected(customersTable: CustomersTable) {
+                                        override fun onCustomerSelected(customersTable: CustomersTable.MeaningfulCustomer) {
                                             invoiceViewModel.customerId.value = customersTable.customerId
                                             invoiceViewModel.customer.value = customersTable
                                         }

@@ -20,7 +20,7 @@ import java.awt.Desktop
 import java.io.File
 import java.util.*
 
-class CustomerDetailView(private val customerData: CustomersTable) : View("${customerData.customerName} Details") {
+class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCustomer) : View("${customerData.customerName} Details") {
     private var deductValue: Double = 0.0
     private val invoicesController: InvoicesController by inject()
     private var balanceVbox: VBox? = null
@@ -170,7 +170,7 @@ class CustomerDetailView(private val customerData: CustomersTable) : View("${cus
     }
 
 
-    private fun performBalanceReduction(selectedItem: CustomersTable, deductValue: Double) {
+    private fun performBalanceReduction(selectedItem: CustomersTable.MeaningfulCustomer, deductValue: Double) {
         Single.fromCallable {
             val customer = Database.getCustomer(selectedItem.customerId)
             customer?.let {

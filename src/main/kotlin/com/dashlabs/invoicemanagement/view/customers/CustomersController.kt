@@ -2,6 +2,7 @@ package com.dashlabs.invoicemanagement.view.customers
 
 import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
 import com.dashlabs.invoicemanagement.databaseconnection.Database
+import com.dashlabs.invoicemanagement.view.invoices.toMeaningFulCustomer
 import io.reactivex.Single
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import io.reactivex.schedulers.Schedulers
@@ -12,10 +13,10 @@ import tornadofx.*
 
 class CustomersController : Controller() {
 
-    val customersListObserver = SimpleListProperty<CustomersTable>()
+    val customersListObserver = SimpleListProperty<CustomersTable.MeaningfulCustomer>()
 
     fun requestForCustomers() {
-        val listOfCustomers = Database.listCustomers()
+        val listOfCustomers = Database.listCustomers()?.map { it.toMeaningFulCustomer() }
         runLater {
             listOfCustomers?.let {
                 customersListObserver.set(FXCollections.observableArrayList(it))
@@ -24,10 +25,10 @@ class CustomersController : Controller() {
     }
 
     fun searchProduct(username: Property<String>) {
-        Single.create<List<CustomersTable>> {
+        Single.create<List<CustomersTable.MeaningfulCustomer>> {
             try {
                 val listOfCustomers = Database.listCustomers(search = username.value)
-                listOfCustomers?.let { it1 -> it.onSuccess(it1) }
+                listOfCustomers?.let { it1 -> it.onSuccess(it1.map { it.toMeaningFulCustomer() }) }
             } catch (ex: Exception) {
                 it.onError(ex)
             }
@@ -40,7 +41,7 @@ class CustomersController : Controller() {
                                 username.value = ""
                             }
                         }
-                        customersListObserver.set(FXCollections.observableArrayList<CustomersTable>(it))
+                        customersListObserver.set(FXCollections.observableArrayList<CustomersTable.MeaningfulCustomer>(it))
                     }
                 }
     }
@@ -65,7 +66,7 @@ class CustomersController : Controller() {
                 .observeOn(JavaFxScheduler.platform())
                 .subscribe { t1, t2 ->
                     t1?.let {
-                        customersListObserver.add(it)
+                        customersListObserver.add(it.toMeaningFulCustomer())
                         print(it)
                     }
                     t2?.let {

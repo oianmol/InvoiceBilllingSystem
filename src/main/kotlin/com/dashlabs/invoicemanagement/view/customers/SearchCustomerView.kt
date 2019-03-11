@@ -99,14 +99,15 @@ class SearchCustomerView : View("Search Customers") {
                 }
     }
 
-    private fun getCustomersView(): TableView<CustomersTable> {
-        return tableview<CustomersTable>(invoicesController.customersListObservable) {
+    private fun getCustomersView(): TableView<CustomersTable.MeaningfulCustomer> {
+        return tableview<CustomersTable.MeaningfulCustomer>(invoicesController.customersListObservable) {
             columnResizePolicy = SmartResize.POLICY
             vboxConstraints { margin = Insets(20.0) }
-            column("Customer Name", CustomersTable::customerName)
-            column("Address", CustomersTable::address)
-            column("State", CustomersTable::state)
-            column("District", CustomersTable::district)
+            column("Customer Name", CustomersTable.MeaningfulCustomer::customerName)
+            column("Amount Due",CustomersTable.MeaningfulCustomer::amountDue)
+            column("Address", CustomersTable.MeaningfulCustomer::address)
+            column("State", CustomersTable.MeaningfulCustomer::state)
+            column("District", CustomersTable.MeaningfulCustomer::district)
             onDoubleClick {
                 CustomerDetailView(this.selectedItem!!).openWindow()
             }
