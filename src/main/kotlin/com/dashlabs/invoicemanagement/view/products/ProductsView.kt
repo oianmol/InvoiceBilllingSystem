@@ -9,8 +9,6 @@ import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
 import javafx.scene.control.TableView
 import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyCodeCombination
-import javafx.scene.input.KeyCombination
 import javafx.scene.layout.VBox
 import tornadofx.*
 
@@ -31,14 +29,7 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
                         margin = Insets(20.0)
                     }
                     setOnMouseClicked {
-                        selectionModel?.selectedItems.let {
-                            val productsMap = FXCollections.observableHashMap<ProductsTable, Int>()
-                            it?.forEach {
-                                productsMap[it] = 1
-                            }
-                            onProductSelectedListener.onProductSelected(productsMap)
-                        }
-                        currentStage?.close()
+                        sendSelectedProducts()
                     }
                 })
             }
@@ -55,8 +46,8 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
                 }
 
                 this.setOnKeyPressed {
-                    when(it.code){
-                        KeyCode.DELETE,KeyCode.BACK_SPACE->{
+                    when (it.code) {
+                        KeyCode.DELETE, KeyCode.BACK_SPACE -> {
                             selectedCell?.row?.let { position ->
                                 alert(Alert.AlertType.CONFIRMATION, "Delete Product ?",
                                         "Remove ${selectedItem?.productName} ?",
@@ -67,10 +58,24 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
                                 }
                             }
                         }
+                        KeyCode.ENTER -> {
+                            sendSelectedProducts()
+                        }
                     }
                 }
             }
         }
+    }
+
+    private fun sendSelectedProducts() {
+        selectionModel?.selectedItems.let {
+            val productsMap = FXCollections.observableHashMap<ProductsTable, Int>()
+            it?.forEach {
+                productsMap[it] = 1
+            }
+            onProductSelectedListener?.onProductSelected(productsMap)
+        }
+        currentStage?.close()
     }
 
     private var selectionModel: TableView.TableViewSelectionModel<ProductsTable>? = null
@@ -126,22 +131,26 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
 
     private fun getSearchProductForm(): VBox {
         return vbox {
-            val kc = KeyCodeCombination(KeyCode.DOWN, KeyCombination.SHIFT_ANY)
-            primaryStage.scene?.accelerators?.set(kc, Runnable {
-                information("doing it")
-            })
             form {
                 fieldset {
                     field("Search Products") {
                         textfield(productViewModel.searchName).validator {
                             if (it.isNullOrBlank()) error("Please enter search Query!") else null
                         }
+
+                        productViewModel.searchName.onChange {
+                            it?.let {
+                                productsController.searchProduct(it)
+                            } ?: run {
+                                requestForProducts()
+                            }
+                        }
                     }
 
                     this.setOnKeyPressed {
                         when (it.code) {
                             KeyCode.ENTER -> {
-                                productsController.searchProduct(productViewModel.searchName)
+                                productsController.searchProduct(productViewModel.searchName.value)
                             }
                         }
                     }
@@ -150,7 +159,7 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
                 button("Search Product") {
                     alignment = Pos.BOTTOM_RIGHT
                     setOnMouseClicked {
-                        productsController.searchProduct(productViewModel.searchName)
+                        productsController.searchProduct(productViewModel.searchName.value)
                     }
                 }
             }

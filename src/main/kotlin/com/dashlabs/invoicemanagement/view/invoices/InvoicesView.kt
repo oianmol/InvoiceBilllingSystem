@@ -6,6 +6,7 @@ import com.dashlabs.invoicemanagement.view.customers.CustomersView
 import com.dashlabs.invoicemanagement.view.customers.OnCustomerSelectedListener
 import com.dashlabs.invoicemanagement.view.customers.OnProductSelectedListener
 import com.dashlabs.invoicemanagement.view.products.ProductsView
+import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
 import javafx.collections.ObservableMap
@@ -13,16 +14,31 @@ import javafx.geometry.Insets
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
 import javafx.scene.control.ScrollPane
+import javafx.scene.control.TableView
 import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyCombination.SHIFT_DOWN
+import org.fxmisc.wellbehaved.event.EventPattern.keyPressed
+import org.fxmisc.wellbehaved.event.InputMap.consume
+import org.fxmisc.wellbehaved.event.InputMap.sequence
+import org.fxmisc.wellbehaved.event.Nodes
 import tornadofx.*
 
 
-class InvoicesView : View("Invoices View"), OnProductSelectedListener {
+class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustomerSelectedListener {
 
     private val invoiceViewModel = InvoiceViewModel()
     private val invoicesController: InvoicesController by inject()
+    private var productsTableView: TableView<InvoicesController.ProductsModel>? = null
 
     override val root = scrollpane {
+        Nodes.addInputMap(this, sequence(
+                consume(keyPressed(KeyCode.C, SHIFT_DOWN)) { e ->
+                    CustomersView(onCustomerSelectedListener = this@InvoicesView).openWindow()
+                },
+                consume(keyPressed(KeyCode.P, SHIFT_DOWN)) { e ->
+                    ProductsView(onProductSelectedListener = this@InvoicesView).openWindow()
+                }
+        ))
         vbarPolicy = ScrollPane.ScrollBarPolicy.ALWAYS
         content = hbox {
             vbox {
@@ -34,22 +50,16 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener {
                     vbox {
                         hboxConstraints { margin = Insets(10.0) }
                         vbox {
-                            button("Select Customer") {
+                            button("Select Customer (Shift+C)") {
                                 vboxConstraints { margin = Insets(10.0, 0.0, 0.0, 0.0) }
-                                setOnMouseClicked {
-                                    CustomersView(onCustomerSelectedListener = object : OnCustomerSelectedListener {
-                                        override fun onCustomerSelected(customersTable: CustomersTable.MeaningfulCustomer) {
-                                            invoiceViewModel.customerId.value = customersTable.customerId
-                                            invoiceViewModel.customer.value = customersTable
-                                        }
-
-                                    }).openWindow()
+                                action {
+                                    CustomersView(onCustomerSelectedListener = this@InvoicesView).openWindow()
                                 }
                             }
 
-                            button("Select Products") {
+                            button("Select Products (Shift+P)") {
                                 vboxConstraints { margin = Insets(10.0, 0.0, 0.0, 00.0) }
-                                setOnMouseClicked {
+                                action {
                                     ProductsView(onProductSelectedListener = this@InvoicesView).openWindow()
                                 }
                             }
@@ -63,6 +73,7 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener {
                     vboxConstraints { margin = Insets(20.0) }
                     tableview<InvoicesController.ProductsModel>(invoicesController.productsQuanityView) {
                         isEditable = true
+                        this@InvoicesView.productsTableView = this
                         column("Product Name", InvoicesController.ProductsModel::productsTable)
                         column("Quantity", InvoicesController.ProductsModel::quantity).makeEditable().setOnEditCommit {
                             if (it.newValue.toInt() != 0) {
@@ -72,14 +83,14 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener {
                             }
                             refresh()
                         }
-                        column("Amount", InvoicesController.ProductsModel::totalAmount).makeEditable()
+                        column("Amount", InvoicesController.ProductsModel::totalAmount)
                         columnResizePolicy = SmartResize.POLICY
 
                         this.setOnKeyPressed {
                             when (it.code) {
                                 KeyCode.DELETE, KeyCode.BACK_SPACE -> {
                                     selectedCell?.row?.let { position ->
-                                        alert(Alert.AlertType.CONFIRMATION, "Remove Item",
+                                        alert(Alert.AlertType.CONFIRMATION, "Remove Items ?",
                                                 "Remove ${selectedItem?.productsTable?.productName} ?",
                                                 buttons = *arrayOf(ButtonType.OK, ButtonType.CANCEL), owner = currentWindow, title = "Hey!") {
                                             if (it == ButtonType.OK) {
@@ -89,6 +100,9 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener {
                                         }
                                     }
                                 }
+                                else -> {
+
+                                }
                             }
                         }
                     }
@@ -97,6 +111,7 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener {
 
             vbox {
                 vbox {
+                    isVisible = false
                     vboxConstraints { margin = Insets(0.0, 0.0, 0.0, 10.0) }
                     label("Total Amount: ") {
                         vboxConstraints { margin = Insets(10.0) }
@@ -173,6 +188,12 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener {
         }
     }
 
+
+    override fun onCustomerSelected(customersTable: CustomersTable.MeaningfulCustomer) {
+        invoiceViewModel.customerId.value = customersTable.customerId
+        invoiceViewModel.customer.value = customersTable
+    }
+
     override fun onProductSelected(newSelectedProducts: ObservableMap<ProductsTable, Int>?) {
         val currentList = FXCollections.observableArrayList<InvoicesController.ProductsModel>()
         invoicesController.productsQuanityView?.let {
@@ -190,19 +211,24 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener {
         }
         invoicesController.updateProductsObserver(currentList)
 
-        runLater {
-            invoiceViewModel.productsList.value = currentList
-            val totalAmount = invoicesController.productsQuanityView.map { it.productsTable.amount * it.quantity.toInt() }.sum()
-            invoiceViewModel.totalPrice.value = totalAmount
-            invoiceViewModel.leftoverAmount.value = totalAmount
+        invoiceViewModel.productsList.value = currentList
+        invoicesController.productsQuanityView.setAll(currentList)
+        val totalAmount = invoicesController.productsQuanityView.map { it.productsTable.amount * it.quantity.toInt() }.sum()
+        invoiceViewModel.totalPrice.value = totalAmount
+        invoiceViewModel.leftoverAmount.value = totalAmount
+
+        Platform.runLater {
+            productsTableView?.refresh()
         }
     }
 
 
     private fun updateTotalAmount() {
-        val totalAmount = invoicesController.productsQuanityView.map { it.productsTable.amount * it.quantity.toInt() }.sum()
-        invoiceViewModel.totalPrice.value = totalAmount
-        invoiceViewModel.leftoverAmount.value = totalAmount
+        Platform.runLater {
+            val totalAmount = invoicesController.productsQuanityView.map { it.totalAmount.toDouble() }.sum()
+            invoiceViewModel.totalPrice.value = totalAmount
+            invoiceViewModel.leftoverAmount.value = totalAmount
+        }
     }
 
     fun requestForInvoices() {

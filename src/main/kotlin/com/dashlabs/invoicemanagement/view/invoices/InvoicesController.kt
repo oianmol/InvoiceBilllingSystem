@@ -46,10 +46,10 @@ class InvoicesController : Controller() {
         }
     }
 
-    fun searchCustomers(state: String, district: String) {
+    fun searchCustomers(state: String, district: String, address: String) {
         Single.create<List<CustomersTable.MeaningfulCustomer>> { emitter->
             try {
-                val listOfInvoices = Database.listCustomers(state, district)
+                val listOfInvoices = Database.listCustomers(state, district,address)
                 listOfInvoices?.let {
                     val customers = listOfInvoices.map { it.toMeaningFulCustomer() }
                     customers.forEach {

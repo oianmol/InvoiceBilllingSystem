@@ -17,9 +17,11 @@
             <array />
           </option>
           <option name="pluginClasspaths">
-            <array>
-              <option value="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-compiler-embeddable/1.2.60/b429653327c8e0e396f940d16b6608df3b3e15c2/kotlin-scripting-compiler-embeddable-1.2.60.jar" />
-            </array>
+            <array />
+          </option>
+          <option name="coroutinesState" value="warn" />
+          <option name="errors">
+            <ArgumentParseErrors />
           </option>
         </compilerArguments>
       </configuration>
@@ -43,13 +45,14 @@
     <orderEntry type="library" name="Gradle: org.xerial:sqlite-jdbc:3.21.0.1" level="project" />
     <orderEntry type="library" name="Gradle: io.reactivex.rxjava2:rxjavafx:2.2.2" level="project" />
     <orderEntry type="library" name="Gradle: org.tensorflow:tensorflow:1.12.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.fxmisc.wellbehaved:wellbehavedfx:0.3.3" level="project" />
     <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.8.5" level="project" />
     <orderEntry type="library" name="Gradle: io.reactivex.rxjava2:rxjava:2.2.3" level="project" />
     <orderEntry type="library" name="Gradle: org.junit.jupiter:junit-jupiter-api:5.1.0" level="project" />
     <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.60" level="project" />
     <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-reflect:1.2.60" level="project" />
-    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.junit.jupiter:junit-jupiter-engine:5.1.0" level="project" />
     <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.60" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Gradle: org.junit.jupiter:junit-jupiter-engine:5.1.0" level="project" />
     <orderEntry type="library" name="Gradle: org.bouncycastle:bctsp-jdk14:1.38" level="project" />
     <orderEntry type="library" name="Gradle: org.bouncycastle:bcmail-jdk14:1.38" level="project" />
     <orderEntry type="library" name="Gradle: org.bouncycastle:bcprov-jdk14:1.38" level="project" />

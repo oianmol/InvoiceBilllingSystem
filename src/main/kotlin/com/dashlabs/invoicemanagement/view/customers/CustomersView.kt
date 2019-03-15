@@ -6,7 +6,12 @@ import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
 import com.google.gson.Gson
 import javafx.geometry.Insets
 import javafx.geometry.Pos
+import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyCombination
 import javafx.scene.layout.VBox
+import org.fxmisc.wellbehaved.event.EventPattern
+import org.fxmisc.wellbehaved.event.InputMap
+import org.fxmisc.wellbehaved.event.Nodes
 import tornadofx.*
 import javax.json.Json
 
@@ -18,6 +23,16 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
     private var districtView: Field? = null
 
     override val root = hbox {
+        Nodes.addInputMap(this, InputMap.sequence(
+                InputMap.consume(EventPattern.keyPressed(KeyCode.A, KeyCombination.CONTROL_DOWN)) { e ->
+                    customersController.addCustomer(customersViewModel.customerName,
+                            customersViewModel.address,
+                            customersViewModel.state,
+                            customersViewModel.district)
+                }
+        ))
+
+
         this.add(getCustomersView())
 
         tableview<CustomersTable.MeaningfulCustomer>(customersController.customersListObserver) {
@@ -35,6 +50,19 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
                     currentStage?.close()
                 } ?: kotlin.run {
                     CustomerDetailView(this.selectedItem!!).openWindow()
+                }
+            }
+
+            this.setOnKeyPressed {
+                when (it.code) {
+                    KeyCode.ENTER -> {
+                        onCustomerSelectedListener?.let {
+                            it.onCustomerSelected(this.selectedItem!!)
+                            currentStage?.close()
+                        } ?: kotlin.run {
+                            CustomerDetailView(this.selectedItem!!).openWindow()
+                        }
+                    }
                 }
             }
         }
@@ -84,7 +112,7 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
 
 
 
-                button("Add Customer") {
+                button("Add Customer (CTRL+A)") {
                     setOnMouseClicked {
                         customersController.addCustomer(customersViewModel.customerName, customersViewModel.address, customersViewModel.state, customersViewModel.district)
                     }
@@ -122,13 +150,21 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
                         textfield(customersViewModel.searchName).validator {
                             if (it.isNullOrBlank()) error("Please enter search Query!") else null
                         }
+
+                        customersViewModel.searchName.onChange {
+                            it?.let {
+                                customersController.searchProduct(it)
+                            } ?: run {
+                                requestForCustomers()
+                            }
+                        }
                     }
                 }
 
                 button("Search Customer") {
                     alignment = Pos.BOTTOM_RIGHT
                     setOnMouseClicked {
-                        customersController.searchProduct(customersViewModel.searchName)
+                        customersController.searchProduct(customersViewModel.searchName.value)
                     }
                 }
             }

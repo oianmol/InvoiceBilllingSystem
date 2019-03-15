@@ -12,21 +12,26 @@ import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.geometry.Side
 import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyCombination
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
+import org.fxmisc.wellbehaved.event.EventPattern
+import org.fxmisc.wellbehaved.event.InputMap
+import org.fxmisc.wellbehaved.event.Nodes
 import tornadofx.*
 
 
 class DashboardView : View("Dashboard") {
 
     private val dashboardController: DashboardController by inject()
-    private var tabNames: ArrayList<String> = arrayListOf("Products [1]", "Customers [2]", "Create Invoice [3]", "Invoice Search [4]","Area Wise Customer's Search[5]")
+    private var tabNames: ArrayList<String> = arrayListOf("Products [1]", "Customers [2]", "Create Invoice [3]", "Invoice Search [4]", "Area Wise Customer's Search[5]")
     private var productsView: ProductsView = ProductsView()
     private var customersView: CustomersView = CustomersView()
     private var invoicesView = InvoicesView()
     private var invoicesSearchView = SearchInvoiceView()
     private var customerSearch = SearchCustomerView()
+
     init {
         subscribe<InvoiceApp.AdminLoggedInEvent> {
             dashboardController.adminLoggedin(it.admin)
@@ -39,6 +44,24 @@ class DashboardView : View("Dashboard") {
     }
 
     override val root = hbox {
+
+        Nodes.addInputMap(this, InputMap.sequence(
+                InputMap.consume(EventPattern.keyPressed(KeyCode.L, KeyCombination.CONTROL_DOWN)) { e ->
+                    if (!isAdminLoggedIn()) {
+                        openInternalWindow(AdminLoginView::class)
+                    } else {
+                        ChangePasswordView(dashboardController.admin).openWindow()
+                    }
+                },
+                InputMap.consume(EventPattern.keyPressed(KeyCode.C, KeyCombination.CONTROL_DOWN)) { e ->
+                    if (!isAdminLoggedIn()) {
+                        openInternalWindow(AdminLoginView::class)
+                    } else {
+                        ChangePasswordView(dashboardController.admin).openWindow()
+                    }
+                }
+        ))
+
         this.hgrow = Priority.ALWAYS
         this.add(imageview("nfs.jpg", lazyload = true) {
             minWidth = 1200.0

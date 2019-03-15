@@ -206,12 +206,20 @@ object Database {
         }
     }
 
-    fun listCustomers(state: String,district:String): List<CustomersTable>? {
-        return customerDao?.queryBuilder()
-                ?.where()
-                ?.like(CustomersTable::state.name, state)?.and()
-                ?.like(CustomersTable::district.name, district)
-                ?.query()
+    fun listCustomers(state: String, district: String, address: String): List<CustomersTable>? {
+        return when {
+            !address.isEmpty() -> customerDao?.queryBuilder()
+                    ?.where()
+                    ?.like(CustomersTable::state.name, state)?.and()
+                    ?.like(CustomersTable::district.name, district)?.and()
+                    ?.like(CustomersTable::address.name, "%$address%")
+                    ?.query()
+            else -> customerDao?.queryBuilder()
+                    ?.where()
+                    ?.like(CustomersTable::state.name, state)?.and()
+                    ?.like(CustomersTable::district.name, district)
+                    ?.query()
+        }
     }
 
     fun listInvoices(): List<InvoiceTable.MeaningfulInvoice>? {
@@ -272,10 +280,6 @@ object Database {
 
     fun getCustomer(customerId: Long): CustomersTable? {
         return customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()?.first()
-    }
-
-    fun getCustomers(customerName: String): MutableList<CustomersTable>? {
-        return customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerName.name, customerName)?.query()
     }
 
 

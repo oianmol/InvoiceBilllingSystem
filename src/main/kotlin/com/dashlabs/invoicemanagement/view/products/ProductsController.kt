@@ -23,10 +23,10 @@ class ProductsController : Controller() {
         }
     }
 
-    fun searchProduct(username: Property<String>) {
+    fun searchProduct(search: String) {
         Single.create<List<ProductsTable>> {
             try {
-                val listOfProducts = Database.listProducts(search = username.value)
+                val listOfProducts = Database.listProducts(search = search)
                 listOfProducts?.let { it1 -> it.onSuccess(it1) }
             } catch (ex: Exception) {
                 it.onError(ex)
@@ -35,11 +35,6 @@ class ProductsController : Controller() {
                 .observeOn(JavaFxScheduler.platform())
                 .subscribe { t1, t2 ->
                     t1?.let {
-                        it.isNotEmpty().let {
-                            if (it) {
-                                username.value = ""
-                            }
-                        }
                         productsListObserver.set(FXCollections.observableArrayList<ProductsTable>(it))
                     }
                 }

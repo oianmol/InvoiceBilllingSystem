@@ -12,6 +12,10 @@ import io.reactivex.schedulers.Schedulers
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.TableView
+import javafx.scene.input.KeyCode
+import org.fxmisc.wellbehaved.event.EventPattern
+import org.fxmisc.wellbehaved.event.InputMap
+import org.fxmisc.wellbehaved.event.Nodes
 import tornadofx.*
 import javax.json.Json
 
@@ -28,6 +32,13 @@ class SearchCustomerView : View("Search Customers") {
     }
 
     override val root = vbox {
+        Nodes.addInputMap(this, InputMap.sequence(
+                InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER)) { e ->
+                    searchCustomers()
+                }
+        ))
+
+
         invoicesController.customersListObservable.addListener { observable, oldValue, newValue ->
             totalBalanceByRegion()
         }
@@ -58,12 +69,19 @@ class SearchCustomerView : View("Search Customers") {
                     }
                 }
 
+                form {
+                    fieldset {
+                        field("Address") {
+                            textfield(viewModel.address)
+                        }
+                    }
+                }
+
                 button("Search") {
                     vboxConstraints { margin = Insets(10.0) }
                     alignment = Pos.BOTTOM_RIGHT
                     setOnMouseClicked {
-                        viewModel.totalPrice.value = null
-                        invoicesController.searchCustomers(viewModel.state.value, viewModel.district.value)
+                        searchCustomers()
                     }
                 }
 
@@ -78,6 +96,11 @@ class SearchCustomerView : View("Search Customers") {
         vbox {
             this.add(getCustomersView())
         }
+    }
+
+    private fun searchCustomers() {
+        viewModel.totalPrice.value = null
+        invoicesController.searchCustomers(viewModel.state.value, viewModel.district.value, viewModel.address.value)
     }
 
     private fun totalBalanceByRegion() {
@@ -104,7 +127,7 @@ class SearchCustomerView : View("Search Customers") {
             columnResizePolicy = SmartResize.POLICY
             vboxConstraints { margin = Insets(20.0) }
             column("Customer Name", CustomersTable.MeaningfulCustomer::customerName)
-            column("Amount Due",CustomersTable.MeaningfulCustomer::amountDue)
+            column("Amount Due", CustomersTable.MeaningfulCustomer::amountDue)
             column("Address", CustomersTable.MeaningfulCustomer::address)
             column("State", CustomersTable.MeaningfulCustomer::state)
             column("District", CustomersTable.MeaningfulCustomer::district)
@@ -133,4 +156,5 @@ class SerchInvoiceViewModel : ItemViewModel<Customer>(Customer()) {
     val state = bind(Customer::state)
     val district = bind(Customer::districtProperty)
     val totalPrice = bind(Customer::search)
+    val address = bind(Customer::address)
 }

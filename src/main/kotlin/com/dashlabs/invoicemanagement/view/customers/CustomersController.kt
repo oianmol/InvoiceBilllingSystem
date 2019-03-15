@@ -24,10 +24,10 @@ class CustomersController : Controller() {
         }
     }
 
-    fun searchProduct(username: Property<String>) {
+    fun searchProduct(search: String) {
         Single.create<List<CustomersTable.MeaningfulCustomer>> {
             try {
-                val listOfCustomers = Database.listCustomers(search = username.value)
+                val listOfCustomers = Database.listCustomers(search = search)
                 listOfCustomers?.let { it1 -> it.onSuccess(it1.map { it.toMeaningFulCustomer() }) }
             } catch (ex: Exception) {
                 it.onError(ex)
@@ -36,11 +36,6 @@ class CustomersController : Controller() {
                 .observeOn(JavaFxScheduler.platform())
                 .subscribe { t1, t2 ->
                     t1?.let {
-                        it.isNotEmpty().let {
-                            if (it) {
-                                username.value = ""
-                            }
-                        }
                         customersListObserver.set(FXCollections.observableArrayList<CustomersTable.MeaningfulCustomer>(it))
                     }
                 }
