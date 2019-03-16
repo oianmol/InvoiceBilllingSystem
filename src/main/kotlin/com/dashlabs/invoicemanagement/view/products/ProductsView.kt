@@ -75,7 +75,7 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
             }
             onProductSelectedListener?.onProductSelected(productsMap)
         }
-        currentStage?.close()
+        //currentStage?.close()
     }
 
     private var selectionModel: TableView.TableViewSelectionModel<ProductsTable>? = null
