@@ -4,8 +4,11 @@ import com.dashlabs.invoicemanagement.State
 import com.dashlabs.invoicemanagement.StateDistrict
 import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
 import com.google.gson.Gson
+import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
+import javafx.scene.Node
+import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.VBox
@@ -21,6 +24,21 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
     private val customersController: CustomersController by inject()
     val state = getStates()
     private var districtView: Field? = null
+    private lateinit var customerName: TextField
+
+    override fun onDock() {
+        super.onDock()
+        repeatFocus(customerName)
+    }
+
+    private fun repeatFocus(node: Node) {
+        Platform.runLater {
+            if (!node.isFocused) {
+                node.requestFocus()
+                repeatFocus(node)
+            }
+        }
+    }
 
     override val root = hbox {
         Nodes.addInputMap(this, InputMap.sequence(
@@ -38,6 +56,7 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
         tableview<CustomersTable.MeaningfulCustomer>(customersController.customersListObserver) {
             columnResizePolicy = SmartResize.POLICY
             hboxConstraints { margin = Insets(20.0, 0.0, 0.0, 0.0) }
+            stylesheets.add("jfx-table-view.css")
 
             column("Customer Name", CustomersTable.MeaningfulCustomer::customerName)
             column("Address", CustomersTable.MeaningfulCustomer::address)
@@ -81,7 +100,9 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
             form {
                 fieldset {
                     field("Customer Name") {
-                        textfield(customersViewModel.customerName).validator {
+                        textfield(customersViewModel.customerName) {
+                            tag = "customer"
+                        }.validator {
                             if (it.isNullOrBlank()) error("Please enter customer name!") else null
                         }
                     }
@@ -147,7 +168,9 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
             form {
                 fieldset {
                     field("Search Customers") {
-                        textfield(customersViewModel.searchName).validator {
+                        textfield(customersViewModel.searchName) {
+                            this@CustomersView.customerName = this
+                        }.validator {
                             if (it.isNullOrBlank()) error("Please enter search Query!") else null
                         }
 

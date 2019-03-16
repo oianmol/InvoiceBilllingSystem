@@ -8,9 +8,12 @@ import com.dashlabs.invoicemanagement.view.customers.SearchCustomerView
 import com.dashlabs.invoicemanagement.view.invoices.InvoicesView
 import com.dashlabs.invoicemanagement.view.invoices.SearchInvoiceView
 import com.dashlabs.invoicemanagement.view.products.ProductsView
+import com.jfoenix.controls.JFXButton
+import com.jfoenix.controls.JFXTabPane
+import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
-import javafx.geometry.Side
+import javafx.scene.control.TabPane
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.HBox
@@ -25,7 +28,7 @@ import tornadofx.*
 class DashboardView : View("Dashboard") {
 
     private val dashboardController: DashboardController by inject()
-    private var tabNames: ArrayList<String> = arrayListOf("Products [1]", "Customers [2]", "Create Invoice [3]", "Invoice Search [4]", "Area Wise Customer's Search[5]")
+    private var tabNames: ArrayList<String> = arrayListOf("Products [CTRL+1]", "Customers [CTRL+2]", "Create Invoice [CTRL+3]", "Invoice Search [CTRL+4]", "Area Wise Customer's Search[CTRL+5]")
     private var productsView: ProductsView = ProductsView()
     private var customersView: CustomersView = CustomersView()
     private var invoicesView = InvoicesView()
@@ -43,7 +46,7 @@ class DashboardView : View("Dashboard") {
         }
     }
 
-    override val root = hbox {
+    override val root = stackpane {
 
         Nodes.addInputMap(this, InputMap.sequence(
                 InputMap.consume(EventPattern.keyPressed(KeyCode.L, KeyCombination.CONTROL_DOWN)) { e ->
@@ -59,22 +62,43 @@ class DashboardView : View("Dashboard") {
                     } else {
                         ChangePasswordView(dashboardController.admin).openWindow()
                     }
+                }, InputMap.consume(EventPattern.keyPressed(KeyCode.DIGIT1, KeyCombination.CONTROL_DOWN)) { e ->
+            tabPane.tabs[0].select()
+        },
+                InputMap.consume(EventPattern.keyPressed(KeyCode.DIGIT2, KeyCombination.CONTROL_DOWN)) { e ->
+                    tabPane.tabs[1].select()
+                },
+                InputMap.consume(EventPattern.keyPressed(KeyCode.DIGIT3, KeyCombination.CONTROL_DOWN)) { e ->
+                    tabPane.tabs[2].select()
+                },
+                InputMap.consume(EventPattern.keyPressed(KeyCode.DIGIT4, KeyCombination.CONTROL_DOWN)) { e ->
+                    tabPane.tabs[3].select()
+                },
+                InputMap.consume(EventPattern.keyPressed(KeyCode.DIGIT5, KeyCombination.CONTROL_DOWN)) { e ->
+                    tabPane.tabs[4].select()
                 }
         ))
 
-        this.hgrow = Priority.ALWAYS
+        this.add(getMainView())
+
         this.add(imageview("nfs.jpg", lazyload = true) {
-            minWidth = 1200.0
-            minHeight = 628.0
+            Platform.runLater {
+                this.fitWidthProperty().bind(this@stackpane.scene.widthProperty())
+                this.fitHeightProperty().bind(this@stackpane.scene.heightProperty())
+            }
+
             onDoubleClick {
-                this.removeFromParent()
-                this@hbox.add(getMainView())
+                this.isVisible = false
             }
         })
+
     }
+
+    private lateinit var tabPane: JFXTabPane
 
     private fun getMainView(): VBox {
         return vbox {
+            tag = "mainview"
             this.vgrow = Priority.ALWAYS
             hbox {
                 label(dashboardController.statusProperty) {
@@ -83,7 +107,13 @@ class DashboardView : View("Dashboard") {
                     HBox.setMargin(this, Insets(10.0))
                 }
 
-                button(dashboardController.admingSettingsProperty) {
+                this += JFXButton().apply {
+                    this.text(dashboardController.admingSettingsProperty){
+
+                    }
+                    style = "   -jfx-button-type: RAISED;\n" +
+                            "     -fx-background-color: #2196f3;\n" +
+                            "     -fx-text-fill: white;"
                     HBox.setMargin(this, Insets(10.0))
                     hboxConstraints {
                         marginRight = 20.0
@@ -99,53 +129,30 @@ class DashboardView : View("Dashboard") {
                 }
             }
 
-
-            drawer {
-                this.scene?.setOnKeyPressed {
-                    when (it.code) {
-                        KeyCode.DIGIT1 -> {
-                            this.items[0].expanded = true
-                        }
-                        KeyCode.DIGIT2 -> {
-                            this.items[1].expanded = true
-                        }
-                        KeyCode.DIGIT3 -> {
-                            this.items[2].expanded = true
-                        }
-                        KeyCode.DIGIT4 -> {
-                            this.items[3].expanded = true
-                        }
-                        KeyCode.DIGIT5 -> {
-                            this.items[4].expanded = true
-                        }
-                        else -> {
-                        }
-                    }
-                }
-
-
-                minWidth = 1200.0
-                minHeight = 628.0
-                dockingSide = Side.TOP
+            this += JFXTabPane().apply {
+                this@DashboardView.tabPane = this
+                tabClosingPolicy = TabPane.TabClosingPolicy.UNAVAILABLE
                 enableWhen(dashboardController.adminLogin)
-                item(tabNames[0], expanded = true) {
+
+                tab(tabNames[0]) {
                     this.add(productsView)
                 }
 
-                item(tabNames[1]) {
+                tab(tabNames[1]) {
                     this.add(customersView)
                 }
 
-                item(tabNames[2]) {
+                tab(tabNames[2]) {
                     this.add(invoicesView)
                 }
-                item(tabNames[3]) {
+                tab(tabNames[3]) {
                     this.add(invoicesSearchView)
                 }
-                item(tabNames[4]) {
+                tab(tabNames[4]) {
                     this.add(customerSearch)
                 }
             }
+
         }
     }
 

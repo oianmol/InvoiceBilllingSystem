@@ -66,6 +66,7 @@ class SearchInvoiceView : View("Search Invoices") {
     private fun getInvoiceView(): TableView<InvoiceTable.MeaningfulInvoice> {
         return tableview<InvoiceTable.MeaningfulInvoice>(invoicesController.invoicesListObserver) {
             columnResizePolicy = SmartResize.POLICY
+            stylesheets.add("jfx-table-view.css")
             vboxConstraints { margin = Insets(20.0) }
             tag = "invoices"
             column("Customer name", InvoiceTable.MeaningfulInvoice::customerName)

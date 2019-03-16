@@ -60,6 +60,8 @@ class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCust
         tableview<InvoiceTable.MeaningfulInvoice>(invoicesController.invoicesListObserver) {
             columnResizePolicy = SmartResize.POLICY
             maxHeight = 300.0
+            stylesheets.add("jfx-table-view.css")
+
             vboxConstraints { margin = Insets(20.0) }
             tag = "invoices"
             column("Bill Date", InvoiceTable.MeaningfulInvoice::dateCreated)

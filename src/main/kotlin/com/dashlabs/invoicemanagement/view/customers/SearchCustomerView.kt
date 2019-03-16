@@ -125,6 +125,8 @@ class SearchCustomerView : View("Search Customers") {
     private fun getCustomersView(): TableView<CustomersTable.MeaningfulCustomer> {
         return tableview<CustomersTable.MeaningfulCustomer>(invoicesController.customersListObservable) {
             columnResizePolicy = SmartResize.POLICY
+            stylesheets.add("jfx-table-view.css")
+
             vboxConstraints { margin = Insets(20.0) }
             column("Customer Name", CustomersTable.MeaningfulCustomer::customerName)
             column("Amount Due", CustomersTable.MeaningfulCustomer::amountDue)

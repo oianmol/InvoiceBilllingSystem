@@ -2,12 +2,16 @@ package com.dashlabs.invoicemanagement.view.products
 
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
 import com.dashlabs.invoicemanagement.view.customers.OnProductSelectedListener
+import com.jfoenix.controls.JFXButton
+import javafx.application.Platform
 import javafx.collections.FXCollections
 import javafx.geometry.Insets
 import javafx.geometry.Pos
+import javafx.scene.Node
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
 import javafx.scene.control.TableView
+import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.VBox
 import tornadofx.*
@@ -17,25 +21,46 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
 
     private val productViewModel = ProductViewModel()
     private val productsController: ProductsController by inject()
+    private lateinit var prodSearch: TextField
+
+    override fun onDock() {
+        super.onDock()
+        repeatFocus(prodSearch)
+    }
+
+
+    private fun repeatFocus(node: Node) {
+        Platform.runLater {
+            if (!node.isFocused) {
+                node.requestFocus()
+                repeatFocus(node)
+            }
+        }
+    }
 
     override val root = hbox {
         this.add(getProductsView())
-
-
         vbox {
             onProductSelectedListener?.let {
-                this.add(button("Select Products") {
-                    vboxConstraints {
-                        margin = Insets(20.0)
-                    }
-                    setOnMouseClicked {
-                        sendSelectedProducts()
-                    }
-                })
+               val button = JFXButton("Select Products").apply {
+                    style = "   -jfx-button-type: RAISED;\n" +
+                            "     -fx-background-color: #2196f3;\n" +
+                            "     -fx-text-fill: white;"
+                   vboxConstraints {
+                       margin = Insets(20.0)
+                   }
+                   setOnMouseClicked {
+                       sendSelectedProducts()
+                   }
+                }
+
+
+                this.add(button)
             }
 
             tableview<ProductsTable>(productsController.productsListObserver) {
                 columnResizePolicy = SmartResize.POLICY
+                stylesheets.add("jfx-table-view.css")
                 vboxConstraints { margin = Insets(20.0) }
                 column("ID", ProductsTable::productId)
                 column("Product Name", ProductsTable::productName)
@@ -118,8 +143,10 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
                 }
 
 
-
-                button("Add Product") {
+                this += JFXButton("Add Product").apply {
+                    style = "   -jfx-button-type: RAISED;\n" +
+                            "     -fx-background-color: #2196f3;\n" +
+                            "     -fx-text-fill: white;"
                     setOnMouseClicked {
                         productsController.addProduct(productViewModel.productName, productViewModel.amountName)
                     }
@@ -134,7 +161,9 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
             form {
                 fieldset {
                     field("Search Products") {
-                        textfield(productViewModel.searchName).validator {
+                        textfield(productViewModel.searchName){
+                            this@ProductsView.prodSearch = this
+                        }.validator {
                             if (it.isNullOrBlank()) error("Please enter search Query!") else null
                         }
 
@@ -156,7 +185,10 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
                     }
                 }
 
-                button("Search Product") {
+                this += JFXButton("Search Product").apply {
+                    style = "   -jfx-button-type: RAISED;\n" +
+                            "     -fx-background-color: #2196f3;\n" +
+                            "     -fx-text-fill: white;"
                     alignment = Pos.BOTTOM_RIGHT
                     setOnMouseClicked {
                         productsController.searchProduct(productViewModel.searchName.value)
@@ -169,4 +201,5 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
     fun requestForProducts() {
         productsController.requestForProducts()
     }
+
 }

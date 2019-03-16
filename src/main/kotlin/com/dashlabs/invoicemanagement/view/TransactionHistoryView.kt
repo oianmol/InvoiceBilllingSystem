@@ -15,6 +15,7 @@ class TransactionHistoryView(customerId: Long) : View("Transaction history") {
         minHeight = 600.0
         tableview<TransactionTable.MeaningfulTransaction>(invoicesController.transactionListObserver) {
             vboxConstraints { margin = Insets(20.0) }
+            stylesheets.add("jfx-table-view.css")
             column("Transaction Date", TransactionTable.MeaningfulTransaction::transactionDate)
             column("Received Amount", TransactionTable.MeaningfulTransaction::deduction)
         }

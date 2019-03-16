@@ -13,7 +13,6 @@ import javafx.collections.ObservableMap
 import javafx.geometry.Insets
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
-import javafx.scene.control.ScrollPane
 import javafx.scene.control.TableView
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCombination.SHIFT_DOWN
@@ -30,7 +29,7 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
     private val invoicesController: InvoicesController by inject()
     private var productsTableView: TableView<InvoicesController.ProductsModel>? = null
 
-    override val root = scrollpane {
+    override val root = vbox {
         Nodes.addInputMap(this, sequence(
                 consume(keyPressed(KeyCode.C, SHIFT_DOWN)) { e ->
                     CustomersView(onCustomerSelectedListener = this@InvoicesView).openWindow()
@@ -39,78 +38,34 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
                     ProductsView(onProductSelectedListener = this@InvoicesView).openWindow()
                 }
         ))
-        vbarPolicy = ScrollPane.ScrollBarPolicy.ALWAYS
-        content = hbox {
+        hbox {
+            vboxConstraints { margin = Insets(20.0) }
+
             vbox {
-                hbox {
-                    label(invoiceViewModel.customer) {
-                        hboxConstraints { margin = Insets(10.0) }
-                    }
+                hboxConstraints { margin = Insets(20.0) }
 
-                    vbox {
-                        hboxConstraints { margin = Insets(10.0) }
-                        vbox {
-                            button("Select Customer (Shift+C)") {
-                                vboxConstraints { margin = Insets(10.0, 0.0, 0.0, 0.0) }
-                                action {
-                                    CustomersView(onCustomerSelectedListener = this@InvoicesView).openWindow()
-                                }
-                            }
+                label(invoiceViewModel.customer) {
+                    vboxConstraints { margin = Insets(10.0, 0.0, 0.0, 0.0) }
+                }
 
-                            button("Select Products (Shift+P)") {
-                                vboxConstraints { margin = Insets(10.0, 0.0, 0.0, 00.0) }
-                                action {
-                                    ProductsView(onProductSelectedListener = this@InvoicesView).openWindow()
-                                }
-                            }
-
-                        }
-
+                button("Select Customer (Shift+C)") {
+                    vboxConstraints { margin = Insets(10.0, 0.0, 0.0, 0.0) }
+                    action {
+                        CustomersView(onCustomerSelectedListener = this@InvoicesView).openWindow()
                     }
                 }
 
-                vbox {
-                    vboxConstraints { margin = Insets(20.0) }
-                    tableview<InvoicesController.ProductsModel>(invoicesController.productsQuanityView) {
-                        isEditable = true
-                        this@InvoicesView.productsTableView = this
-                        column("Product Name", InvoicesController.ProductsModel::productsTable)
-                        column("Quantity", InvoicesController.ProductsModel::quantity).makeEditable().setOnEditCommit {
-                            if (it.newValue.toInt() != 0) {
-                                invoicesController.productsQuanityView[it.tablePosition.row].quantity = it.newValue
-                                invoicesController.productsQuanityView[it.tablePosition.row].totalAmount = it.newValue.toInt().times(invoicesController.productsQuanityView[it.tablePosition.row].baseAmount).toString()
-                                updateTotalAmount()
-                            }
-                            refresh()
-                        }
-                        column("Amount", InvoicesController.ProductsModel::totalAmount)
-                        columnResizePolicy = SmartResize.POLICY
-
-                        this.setOnKeyPressed {
-                            when (it.code) {
-                                KeyCode.DELETE, KeyCode.BACK_SPACE -> {
-                                    selectedCell?.row?.let { position ->
-                                        alert(Alert.AlertType.CONFIRMATION, "Remove Items ?",
-                                                "Remove ${selectedItem?.productsTable?.productName} ?",
-                                                buttons = *arrayOf(ButtonType.OK, ButtonType.CANCEL), owner = currentWindow, title = "Hey!") {
-                                            if (it == ButtonType.OK) {
-                                                invoicesController.productsQuanityView.removeAt(position)
-                                                refresh()
-                                            }
-                                        }
-                                    }
-                                }
-                                else -> {
-
-                                }
-                            }
-                        }
+                button("Select Products (Shift+P)") {
+                    vboxConstraints { margin = Insets(10.0, 0.0, 0.0, 00.0) }
+                    action {
+                        ProductsView(onProductSelectedListener = this@InvoicesView).openWindow()
                     }
                 }
             }
 
             vbox {
-                vbox {
+                hboxConstraints { margin = Insets(20.0) }
+                /*vbox {
                     isVisible = false
                     vboxConstraints { margin = Insets(0.0, 0.0, 0.0, 10.0) }
                     label("Total Amount: ") {
@@ -121,7 +76,7 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
                         this.isEditable = false
                         this.filterInput { it.controlNewText.isDouble() }
                     }
-                }
+                }*/
 
                 vbox {
                     vboxConstraints { margin = Insets(0.0, 0.0, 0.0, 10.0) }
@@ -185,9 +140,50 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
                     }
                 }
             }
+
+
+        }
+
+        vbox {
+            vboxConstraints { margin = Insets(20.0) }
+            tableview<InvoicesController.ProductsModel>(invoicesController.productsQuanityView) {
+                isEditable = true
+                stylesheets.add("jfx-table-view.css")
+                this@InvoicesView.productsTableView = this
+                column("Product Name", InvoicesController.ProductsModel::productsTable)
+                column("Quantity", InvoicesController.ProductsModel::quantity).makeEditable().setOnEditCommit {
+                    if (it.newValue.toInt() != 0) {
+                        invoicesController.productsQuanityView[it.tablePosition.row].quantity = it.newValue
+                        invoicesController.productsQuanityView[it.tablePosition.row].totalAmount = it.newValue.toInt().times(invoicesController.productsQuanityView[it.tablePosition.row].baseAmount).toString()
+                        updateTotalAmount()
+                    }
+                    refresh()
+                }
+                column("Amount", InvoicesController.ProductsModel::totalAmount)
+                columnResizePolicy = SmartResize.POLICY
+
+                this.setOnKeyPressed {
+                    when (it.code) {
+                        KeyCode.DELETE, KeyCode.BACK_SPACE -> {
+                            selectedCell?.row?.let { position ->
+                                alert(Alert.AlertType.CONFIRMATION, "Remove Items ?",
+                                        "Remove ${selectedItem?.productsTable?.productName} ?",
+                                        buttons = *arrayOf(ButtonType.OK, ButtonType.CANCEL), owner = currentWindow, title = "Hey!") {
+                                    if (it == ButtonType.OK) {
+                                        invoicesController.productsQuanityView.removeAt(position)
+                                        refresh()
+                                    }
+                                }
+                            }
+                        }
+                        else -> {
+
+                        }
+                    }
+                }
+            }
         }
     }
-
 
     override fun onCustomerSelected(customersTable: CustomersTable.MeaningfulCustomer) {
         invoiceViewModel.customerId.value = customersTable.customerId

@@ -55,6 +55,7 @@ dependencies {
     testRuntime "org.junit.jupiter:junit-jupiter-engine:$junit_version"
     compile 'no.tornado:tornadofx-controlsfx:0.1'
     compile group: 'org.fxmisc.wellbehaved', name: 'wellbehavedfx', version: '0.3.3'
+    compile 'com.jfoenix:jfoenix:8.0.8' // Java 8
 }
 
 mainClassName = "com.dashlabs.invoicemanagement.app.InvoiceApp"
