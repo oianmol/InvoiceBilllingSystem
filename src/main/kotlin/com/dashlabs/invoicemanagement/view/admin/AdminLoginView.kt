@@ -7,6 +7,7 @@ import io.reactivex.schedulers.Schedulers
 import javafx.application.Platform
 import javafx.geometry.Orientation
 import javafx.scene.Node
+import javafx.scene.control.Button
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.HBox
@@ -23,6 +24,7 @@ class AdminLoginView : View("Admin Login!") {
     private lateinit var registerLayout: HBox
 
     private lateinit var userName: Node
+    private lateinit var registerButton: Button
 
     override fun onDock() {
         super.onDock()
@@ -42,10 +44,8 @@ class AdminLoginView : View("Admin Login!") {
 
     override val root = hbox {
         Nodes.addInputMap(this, InputMap.sequence(
-                InputMap.consume(EventPattern.keyPressed(KeyCode.R, KeyCombination.CONTROL_DOWN)) { e ->
-                    registerLayout.getChildList()?.filter { it.tag == "registerButton" }?.firstOrNull()?.let {
-                        it.isVisible = !it.isVisible
-                    }
+                InputMap.consume(EventPattern.keyPressed(KeyCode.R, KeyCombination.SHIFT_DOWN)) { e ->
+                    registerButton.isVisible = !registerButton.isVisible
                 }
         ))
         form {
@@ -83,7 +83,7 @@ class AdminLoginView : View("Admin Login!") {
                     }
 
                     button("Register Admin") {
-                        tag = "registerButton"
+                        this@AdminLoginView.registerButton = this
                         isVisible = false
                         hboxConstraints {
                             marginRight = 20.0
