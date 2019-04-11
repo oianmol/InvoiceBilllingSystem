@@ -2,6 +2,7 @@ package com.dashlabs.invoicemanagement.view.admin
 
 import com.dashlabs.invoicemanagement.app.InvoiceApp
 import com.dashlabs.invoicemanagement.databaseconnection.AdminTable
+import com.dashlabs.invoicemanagement.databaseconnection.Database
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import io.reactivex.schedulers.Schedulers
 import javafx.application.Platform

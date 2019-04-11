@@ -137,8 +137,12 @@ class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCust
 
     private fun showInvoiceDetails(selectedItem: InvoiceTable.MeaningfulInvoice?) {
         selectedItem?.let {
-            val t1 = generateInvoice(selectedItem).blockingGet()
-            alertUser(t1, selectedItem)
+            generateInvoice(selectedItem)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(JavaFxScheduler.platform())
+                    .subscribe { t1, t2 ->
+                alertUser(t1, selectedItem)
+            }
         }
     }
 
@@ -146,7 +150,7 @@ class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCust
         alert(Alert.AlertType.INFORMATION, "Invoice Information",
                 "View invoice or Save It",
                 buttons = *arrayOf(ButtonType("Save", ButtonBar.ButtonData.BACK_PREVIOUS),
-                        ButtonType("Preview", ButtonBar.ButtonData.NEXT_FORWARD)), owner = currentWindow, title = "Hey!") {
+                        ButtonType("Preview", ButtonBar.ButtonData.NEXT_FORWARD)), title = "Hey!") {
             when {
                 it.buttonData == ButtonBar.ButtonData.NEXT_FORWARD -> try {
                     Desktop.getDesktop().browse(t1.toURI())
@@ -168,7 +172,7 @@ class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCust
             file.createNewFile()
             InvoiceGenerator.makePDF(file, selectedItem, list.map { Pair(it.first, it.second) }.toMutableList())
             file
-        }.subscribeOn(Schedulers.io()).observeOn(JavaFxScheduler.platform())
+        }
     }
 
 
