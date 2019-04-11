@@ -15,9 +15,6 @@ import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
 import javafx.scene.control.TableView
 import javafx.scene.input.KeyCode
-import javafx.scene.input.KeyCombination.SHIFT_DOWN
-import org.fxmisc.wellbehaved.event.EventPattern.keyPressed
-import org.fxmisc.wellbehaved.event.InputMap.consume
 import org.fxmisc.wellbehaved.event.InputMap.sequence
 import org.fxmisc.wellbehaved.event.Nodes
 import tornadofx.*
@@ -30,14 +27,6 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
     private var productsTableView: TableView<InvoicesController.ProductsModel>? = null
 
     override val root = vbox {
-        Nodes.addInputMap(this, sequence(
-                consume(keyPressed(KeyCode.C, SHIFT_DOWN)) { e ->
-                    CustomersView(onCustomerSelectedListener = this@InvoicesView).openWindow()
-                },
-                consume(keyPressed(KeyCode.P, SHIFT_DOWN)) { e ->
-                    ProductsView(onProductSelectedListener = this@InvoicesView).openWindow()
-                }
-        ))
         hbox {
             vboxConstraints { margin = Insets(20.0) }
 
@@ -229,6 +218,14 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
 
     fun requestForInvoices() {
         invoicesController.requestForInvoices()
+    }
+
+    fun openCustomersView() {
+        CustomersView(onCustomerSelectedListener = this@InvoicesView).openWindow()
+    }
+
+    fun openProductsView() {
+        ProductsView(onProductSelectedListener = this@InvoicesView).openWindow()
     }
 }
 

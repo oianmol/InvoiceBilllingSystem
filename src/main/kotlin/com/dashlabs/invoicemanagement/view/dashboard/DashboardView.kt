@@ -76,6 +76,11 @@ class DashboardView : View("Dashboard") {
                 },
                 InputMap.consume(EventPattern.keyPressed(KeyCode.DIGIT5, KeyCombination.CONTROL_DOWN)) { e ->
                     tabPane.tabs[4].select()
+                },
+                InputMap.consume(EventPattern.keyPressed(KeyCode.C, KeyCombination.SHIFT_DOWN)) { e ->
+                    invoicesView.openCustomersView() },
+                InputMap.consume(EventPattern.keyPressed(KeyCode.P, KeyCombination.SHIFT_DOWN)) { e ->
+                    invoicesView.openProductsView()
                 }
         ))
 
@@ -108,7 +113,7 @@ class DashboardView : View("Dashboard") {
                 }
 
                 this += JFXButton().apply {
-                    this.text(dashboardController.admingSettingsProperty){
+                    this.text(dashboardController.admingSettingsProperty) {
 
                     }
                     style = "   -jfx-button-type: RAISED;\n" +

@@ -100,7 +100,8 @@ class SearchCustomerView : View("Search Customers") {
 
     private fun searchCustomers() {
         viewModel.totalPrice.value = null
-        invoicesController.searchCustomers(viewModel.state.value, viewModel.district.value, viewModel.address.value?:"")
+        invoicesController.searchCustomers(viewModel.state.value, viewModel.district.value, viewModel.address.value
+                ?: "")
     }
 
     private fun totalBalanceByRegion() {
@@ -134,7 +135,9 @@ class SearchCustomerView : View("Search Customers") {
             column("State", CustomersTable.MeaningfulCustomer::state)
             column("District", CustomersTable.MeaningfulCustomer::district)
             onDoubleClick {
-                CustomerDetailView(this.selectedItem!!).openWindow()
+                this.selectedItem?.let {
+                    CustomerDetailView(it).openWindow()
+                }
             }
         }
     }

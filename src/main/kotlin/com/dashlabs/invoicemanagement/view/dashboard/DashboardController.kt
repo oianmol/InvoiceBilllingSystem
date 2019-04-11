@@ -1,8 +1,6 @@
 package com.dashlabs.invoicemanagement.view.dashboard
 
-import com.dashlabs.invoicemanagement.databaseconnection.Database
 import com.dashlabs.invoicemanagement.view.admin.Admin
-import com.dashlabs.invoicemanagement.view.products.Product
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
 import tornadofx.*
