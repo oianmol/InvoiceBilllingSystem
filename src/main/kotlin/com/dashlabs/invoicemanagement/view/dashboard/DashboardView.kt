@@ -34,6 +34,7 @@ class DashboardView : View("Dashboard") {
     private var invoicesView = InvoicesView()
     private var invoicesSearchView = SearchInvoiceView()
     private var customerSearch = SearchCustomerView()
+    private var carHammeredTimes = 0
 
     init {
         subscribe<InvoiceApp.AdminLoggedInEvent> {
@@ -78,7 +79,8 @@ class DashboardView : View("Dashboard") {
                     tabPane.tabs[4].select()
                 },
                 InputMap.consume(EventPattern.keyPressed(KeyCode.C, KeyCombination.SHIFT_DOWN)) { e ->
-                    invoicesView.openCustomersView() },
+                    invoicesView.openCustomersView()
+                },
                 InputMap.consume(EventPattern.keyPressed(KeyCode.P, KeyCombination.SHIFT_DOWN)) { e ->
                     invoicesView.openProductsView()
                 }
@@ -92,8 +94,11 @@ class DashboardView : View("Dashboard") {
                 this.fitHeightProperty().bind(this@stackpane.scene.heightProperty())
             }
 
-            onDoubleClick {
-                this.isVisible = false
+            setOnMouseClicked {
+                carHammeredTimes++
+                if (carHammeredTimes > 10) {
+                    this.isVisible = false
+                }
             }
         })
 
