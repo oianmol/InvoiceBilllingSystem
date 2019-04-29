@@ -147,10 +147,10 @@ class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCust
     }
 
     private fun alertUser(t1: File, selectedItem: InvoiceTable.MeaningfulInvoice) {
-        alert(Alert.AlertType.INFORMATION, "Invoice Information",
+        alert(Alert.AlertType.CONFIRMATION, "Invoice Information",
                 "View invoice or Save It",
                 buttons = *arrayOf(ButtonType("Save", ButtonBar.ButtonData.BACK_PREVIOUS),
-                        ButtonType("Preview", ButtonBar.ButtonData.NEXT_FORWARD)), title = "Hey!") {
+                        ButtonType("Preview", ButtonBar.ButtonData.NEXT_FORWARD),ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE)), title = "Hey!") {
             when {
                 it.buttonData == ButtonBar.ButtonData.NEXT_FORWARD -> try {
                     Desktop.getDesktop().browse(t1.toURI())

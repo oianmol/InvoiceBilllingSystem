@@ -94,7 +94,8 @@ class SearchInvoiceView : View("Search Invoices") {
                     alert(Alert.AlertType.CONFIRMATION, "Invoice Information",
                             "View invoice or Save It",
                             buttons = *arrayOf(ButtonType("Save", ButtonBar.ButtonData.BACK_PREVIOUS),
-                                    ButtonType("Preview", ButtonBar.ButtonData.NEXT_FORWARD)), owner = currentWindow, title = "Hey!") {
+                                    ButtonType("Preview", ButtonBar.ButtonData.NEXT_FORWARD),
+                                    ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE)), owner = currentWindow, title = "Hey!") {
                         if (it.buttonData == ButtonBar.ButtonData.NEXT_FORWARD) {
                             try {
                                 Desktop.getDesktop().browse(t1.toURI())
@@ -103,6 +104,7 @@ class SearchInvoiceView : View("Search Invoices") {
                             }
                         } else if (it.buttonData == ButtonBar.ButtonData.BACK_PREVIOUS) {
                             savePdf(selectedItem, t1)
+                        } else if (ButtonBar.ButtonData.CANCEL_CLOSE == it.buttonData) {
 
                         }
                     }
