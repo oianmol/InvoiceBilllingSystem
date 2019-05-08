@@ -69,10 +69,10 @@ class SearchInvoiceView : View("Search Invoices") {
             stylesheets.add("jfx-table-view.css")
             vboxConstraints { margin = Insets(20.0) }
             tag = "invoices"
-            column("Customer name", InvoiceTable.MeaningfulInvoice::customerName)
-            column("Bill Date", InvoiceTable.MeaningfulInvoice::dateCreated)
-            column("Amount Due", InvoiceTable.MeaningfulInvoice::outstandingAmount)
-            column("Bill Amount", InvoiceTable.MeaningfulInvoice::amountTotal)
+            column("Customer name", InvoiceTable.MeaningfulInvoice::customerName).remainingWidth()
+            column("Bill Date", InvoiceTable.MeaningfulInvoice::dateCreated).remainingWidth()
+            column("Amount Due", InvoiceTable.MeaningfulInvoice::outstandingAmount).remainingWidth()
+            column("Bill Amount", InvoiceTable.MeaningfulInvoice::amountTotal).remainingWidth()
             onDoubleClick {
                 showInvoiceDetails(invoicesController.invoicesListObserver.value[this.selectedCell!!.row])
             }

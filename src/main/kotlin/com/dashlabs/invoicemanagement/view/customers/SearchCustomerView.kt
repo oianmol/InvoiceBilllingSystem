@@ -129,11 +129,11 @@ class SearchCustomerView : View("Search Customers") {
             stylesheets.add("jfx-table-view.css")
 
             vboxConstraints { margin = Insets(20.0) }
-            column("Customer Name", CustomersTable.MeaningfulCustomer::customerName)
-            column("Amount Due", CustomersTable.MeaningfulCustomer::amountDue)
-            column("Address", CustomersTable.MeaningfulCustomer::address)
-            column("State", CustomersTable.MeaningfulCustomer::state)
-            column("District", CustomersTable.MeaningfulCustomer::district)
+            column("Customer Name", CustomersTable.MeaningfulCustomer::customerName).remainingWidth()
+            column("Amount Due", CustomersTable.MeaningfulCustomer::amountDue).remainingWidth()
+            column("Address", CustomersTable.MeaningfulCustomer::address).remainingWidth()
+            column("State", CustomersTable.MeaningfulCustomer::state).remainingWidth()
+            column("District", CustomersTable.MeaningfulCustomer::district).remainingWidth()
             onDoubleClick {
                 this.selectedItem?.let {
                     CustomerDetailView(it).openWindow()

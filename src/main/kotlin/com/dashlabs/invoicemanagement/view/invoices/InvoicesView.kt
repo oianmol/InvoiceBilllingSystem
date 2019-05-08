@@ -139,8 +139,8 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
                 isEditable = true
                 stylesheets.add("jfx-table-view.css")
                 this@InvoicesView.productsTableView = this
-                column("Product Name", InvoicesController.ProductsModel::productsTable)
-                column("Quantity", InvoicesController.ProductsModel::quantity).makeEditable().setOnEditCommit {
+                column("Product Name", InvoicesController.ProductsModel::productsTable).remainingWidth()
+                column("Quantity", InvoicesController.ProductsModel::quantity).remainingWidth().makeEditable().setOnEditCommit {
                     if (it.newValue.toInt() != 0) {
                         invoicesController.productsQuanityView[it.tablePosition.row].quantity = it.newValue
                         invoicesController.productsQuanityView[it.tablePosition.row].totalAmount = it.newValue.toInt().times(invoicesController.productsQuanityView[it.tablePosition.row].baseAmount).toString()
@@ -148,7 +148,7 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
                     }
                     refresh()
                 }
-                column("Amount", InvoicesController.ProductsModel::totalAmount)
+                column("Amount", InvoicesController.ProductsModel::totalAmount).remainingWidth()
                 columnResizePolicy = SmartResize.POLICY
 
                 this.setOnKeyPressed {

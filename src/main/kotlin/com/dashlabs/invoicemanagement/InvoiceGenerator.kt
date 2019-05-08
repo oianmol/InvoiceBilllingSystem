@@ -45,9 +45,9 @@ object InvoiceGenerator {
             irhTable.addCell(invoiceTable)
 
             val fs = FontSelector()
-            val font = FontFactory.getFont(FontFactory.TIMES_ROMAN, 13F, Font.BOLD)
+            val font = FontFactory.getFont(FontFactory.TIMES_ROMAN, 10F, Font.BOLD)
             fs.addFont(font)
-            val bill = fs.process("Bill To") // customer information
+            val bill = fs.process("") // customer information
             var customer = Database.getCustomer(data.customerId)
             val name = Paragraph(customer?.customerName)
             name.indentationLeft = 20F
@@ -133,7 +133,7 @@ object InvoiceGenerator {
 
     fun getIRHCell(text: String, alignment: Int): PdfPCell {
         val fs = FontSelector()
-        val font = FontFactory.getFont(FontFactory.HELVETICA, 16F)
+        val font = FontFactory.getFont(FontFactory.HELVETICA, 14F)
         /*	font.setColor(BaseColor.GRAY);*/
         fs.addFont(font)
         val phrase = fs.process(text)
