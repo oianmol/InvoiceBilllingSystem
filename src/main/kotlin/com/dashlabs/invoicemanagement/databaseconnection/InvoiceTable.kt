@@ -33,16 +33,21 @@ class InvoiceTable {
         return "$customerId $invoiceId $productsPurchased $dateCreated $dateModified"
     }
 
-    fun asMeaningfulInvoice(): MeaningfulInvoice {
-        return MeaningfulInvoice(this.invoiceId.toString(),
-                Date(this.dateModified).toString(),
-                Database.getCustomer(this.customerId)!!.customerName,
-                this.customerId,
-                this.dateModified,
-                this.outstandingAmount,
-                amountTotal,
-                this.productsPurchased,
-                this.amountTotal.minus(this.outstandingAmount).toString())
+    fun asMeaningfulInvoice(): MeaningfulInvoice? {
+        Database.getCustomer(this.customerId)?.let {
+            return MeaningfulInvoice(this.invoiceId.toString(),
+                    Date(this.dateModified).toString(),
+                    it.customerName,
+                    this.customerId,
+                    this.dateModified,
+                    this.outstandingAmount,
+                    amountTotal,
+                    this.productsPurchased,
+                    this.amountTotal.minus(this.outstandingAmount).toString())
+        } ?: kotlin.run {
+            return null
+        }
+
     }
 
     class MeaningfulInvoice(var invoiceId: String,
@@ -53,5 +58,5 @@ class InvoiceTable {
                             var outstandingAmount: Double,
                             var amountTotal: Double,
                             var productsPurchased: String,
-                            var paymentReceived:String)
+                            var paymentReceived: String)
 }

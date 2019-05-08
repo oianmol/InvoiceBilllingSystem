@@ -225,7 +225,7 @@ object Database {
 
     fun listInvoices(): List<InvoiceTable.MeaningfulInvoice>? {
         val invoices = invoicesDao?.queryForAll()
-        return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }
+        return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }?.filterNotNull()
     }
 
     fun listTransactions(customerId: Long): List<TransactionTable.MeaningfulTransaction>? {
@@ -237,7 +237,7 @@ object Database {
 
     fun listInvoices(customerId: Long): List<InvoiceTable.MeaningfulInvoice>? {
         val invoices = invoicesDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()
-        return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }
+        return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }?.filterNotNull()
     }
 
     fun listInvoicesSimple(customerId: Long): List<InvoiceTable>? {
@@ -247,7 +247,7 @@ object Database {
 
     fun listInvoices(startTime: LocalDateTime, endTime: LocalDateTime): List<InvoiceTable.MeaningfulInvoice>? {
         val invoices = invoicesDao?.queryBuilder()?.where()?.between(InvoiceTable::dateModified.name, startTime.toEpochSecond(OffsetDateTime.now().offset).times(1000), endTime.toEpochSecond(OffsetDateTime.now().offset).times(1000))?.query()
-        return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }
+        return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }?.filterNotNull()
     }
 
     fun createInvoice(invoice: Invoice): InvoiceTable.MeaningfulInvoice? {
@@ -280,7 +280,7 @@ object Database {
     }
 
     fun getCustomer(customerId: Long): CustomersTable? {
-        return customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()?.first()
+        return customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()?.firstOrNull()
     }
 
 
@@ -318,10 +318,17 @@ object Database {
                         invoicesDao?.update(it)
                     }
                 }
-
             }
         }
         return true
+    }
+
+    fun deleteCustomer(customerId: Long): Boolean {
+        customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.queryForFirst()?.let {
+            customerDao?.delete(it)
+            return true
+        }
+        return false
     }
 
 }

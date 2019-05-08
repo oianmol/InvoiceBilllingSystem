@@ -8,10 +8,14 @@ import javafx.application.Platform
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Node
+import javafx.scene.control.Alert
+import javafx.scene.control.ButtonType
+import javafx.scene.control.TableView
 import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.VBox
+import javafx.stage.Screen
 import org.fxmisc.wellbehaved.event.EventPattern
 import org.fxmisc.wellbehaved.event.InputMap
 import org.fxmisc.wellbehaved.event.Nodes
@@ -52,36 +56,64 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
 
 
         this.add(getCustomersView())
+        this.add(getCustomersList())
+    }
 
-        tableview<CustomersTable.MeaningfulCustomer>(customersController.customersListObserver) {
-            columnResizePolicy = SmartResize.POLICY
-            hboxConstraints { margin = Insets(20.0, 0.0, 0.0, 0.0) }
-            stylesheets.add("jfx-table-view.css")
+    private fun getCustomersList(): VBox {
+        return vbox {
+            onCustomerSelectedListener?.let {
 
-            column("Customer Name", CustomersTable.MeaningfulCustomer::customerName)
-            column("Address", CustomersTable.MeaningfulCustomer::address)
-            column("State", CustomersTable.MeaningfulCustomer::state)
-            column("District", CustomersTable.MeaningfulCustomer::district)
-
-            onDoubleClick {
-                onCustomerSelectedListener?.let {
-                    it.onCustomerSelected(this.selectedItem!!)
-                    currentStage?.close()
-                } ?: kotlin.run {
-                    CustomerDetailView(this.selectedItem!!).openWindow()
+            }?:kotlin.run {
+                Platform.runLater {
+                    this.minWidth = Screen.getPrimary().visualBounds.width.div(3)
                 }
             }
 
-            this.setOnKeyPressed {
-                when (it.code) {
-                    KeyCode.ENTER -> {
-                        onCustomerSelectedListener?.let {
-                            it.onCustomerSelected(this.selectedItem!!)
-                            currentStage?.close()
-                        } ?: kotlin.run {
-                            CustomerDetailView(this.selectedItem!!).openWindow()
+            tableview<CustomersTable.MeaningfulCustomer>(customersController.customersListObserver) {
+                columnResizePolicy = SmartResize.POLICY
+                vboxConstraints { margin = Insets(20.0) }
+                stylesheets.add("jfx-table-view.css")
+
+                column("Customer Name", CustomersTable.MeaningfulCustomer::customerName)
+                column("Address", CustomersTable.MeaningfulCustomer::address)
+                column("State", CustomersTable.MeaningfulCustomer::state)
+                column("District", CustomersTable.MeaningfulCustomer::district)
+
+                onDoubleClick {
+                    onCustomerSelectedListener?.let {
+                        it.onCustomerSelected(this.selectedItem!!)
+                        currentStage?.close()
+                    } ?: kotlin.run {
+                        CustomerDetailView(this.selectedItem!!).openWindow()
+                    }
+                }
+
+                this.setOnKeyPressed {
+                    this.selectedItem?.let { item ->
+                        when (it.code) {
+                            KeyCode.ENTER -> {
+                                onCustomerSelectedListener?.let {
+                                    it.onCustomerSelected(this.selectedItem!!)
+                                    currentStage?.close()
+                                } ?: kotlin.run {
+                                    CustomerDetailView(this.selectedItem!!).openWindow()
+                                }
+                            }
+                            KeyCode.DELETE, KeyCode.BACK_SPACE -> {
+                                alert(Alert.AlertType.CONFIRMATION, "Delete Customer ${this.selectedItem!!.customerName} ?",
+                                        "Remove ${item.customerName} ?",
+                                        buttons = *arrayOf(ButtonType.YES, ButtonType.CANCEL), owner = currentWindow, title = "Hey!") {
+                                    if (it == ButtonType.YES) {
+                                        customersController.deleteCustomer(item)
+                                    }
+                                }
+                            }
+                            else -> {
+
+                            }
                         }
                     }
+
                 }
             }
         }

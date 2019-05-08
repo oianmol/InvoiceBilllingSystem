@@ -14,6 +14,7 @@ import javafx.scene.control.TableView
 import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.VBox
+import javafx.stage.Screen
 import tornadofx.*
 
 
@@ -40,18 +41,29 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
 
     override val root = hbox {
         this.add(getProductsView())
-        vbox {
+        this.add(getProductsList())
+    }
+
+    private fun getProductsList(): VBox {
+        return vbox {
             onProductSelectedListener?.let {
-               val button = JFXButton("Select Products").apply {
+
+            } ?: kotlin.run {
+                Platform.runLater {
+                    this.minWidth = Screen.getPrimary().visualBounds.width.div(3)
+                }
+            }
+            onProductSelectedListener?.let {
+                val button = JFXButton("Select Products").apply {
                     style = "   -jfx-button-type: RAISED;\n" +
                             "     -fx-background-color: #2196f3;\n" +
                             "     -fx-text-fill: white;"
-                   vboxConstraints {
-                       margin = Insets(20.0)
-                   }
-                   setOnMouseClicked {
-                       sendSelectedProducts()
-                   }
+                    vboxConstraints {
+                        margin = Insets(20.0)
+                    }
+                    setOnMouseClicked {
+                        sendSelectedProducts()
+                    }
                 }
 
 
@@ -62,9 +74,9 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
                 columnResizePolicy = SmartResize.POLICY
                 stylesheets.add("jfx-table-view.css")
                 vboxConstraints { margin = Insets(20.0) }
-                column("ID", ProductsTable::productId)
-                column("Product Name", ProductsTable::productName)
-                column("Amount", ProductsTable::amount)
+                column("ID", ProductsTable::productId).remainingWidth()
+                column("Product Name", ProductsTable::productName).remainingWidth()
+                column("Amount", ProductsTable::amount).remainingWidth()
                 onProductSelectedListener?.let {
                     multiSelect(enable = true)
                     this@ProductsView.selectionModel = selectionModel
@@ -161,7 +173,7 @@ class ProductsView(private val onProductSelectedListener: OnProductSelectedListe
             form {
                 fieldset {
                     field("Search Products") {
-                        textfield(productViewModel.searchName){
+                        textfield(productViewModel.searchName) {
                             this@ProductsView.prodSearch = this
                         }.validator {
                             if (it.isNullOrBlank()) error("Please enter search Query!") else null

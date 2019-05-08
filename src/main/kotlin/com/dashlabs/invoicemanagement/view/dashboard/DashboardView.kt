@@ -19,6 +19,7 @@ import javafx.scene.input.KeyCombination
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
+import javafx.stage.Screen
 import org.fxmisc.wellbehaved.event.EventPattern
 import org.fxmisc.wellbehaved.event.InputMap
 import org.fxmisc.wellbehaved.event.Nodes
@@ -45,6 +46,11 @@ class DashboardView : View("Dashboard") {
             invoicesSearchView.requestForInvoices()
             println("User logged in! ${it.admin.username}")
         }
+    }
+
+    override fun onDock() {
+        super.onDock()
+        modalStage?.isMaximized = true
     }
 
     override val root = stackpane {
@@ -108,6 +114,11 @@ class DashboardView : View("Dashboard") {
 
     private fun getMainView(): VBox {
         return vbox {
+            Platform.runLater {
+                this.minHeight = Screen.getPrimary().visualBounds.height
+                this.minWidth = Screen.getPrimary().visualBounds.width
+            }
+
             tag = "mainview"
             this.vgrow = Priority.ALWAYS
             hbox {

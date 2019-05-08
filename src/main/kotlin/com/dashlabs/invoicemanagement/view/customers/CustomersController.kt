@@ -71,6 +71,26 @@ class CustomersController : Controller() {
                 }
     }
 
+    fun deleteCustomer(item: CustomersTable.MeaningfulCustomer) {
+        Single.fromCallable<Boolean> {
+            try {
+                Database.deleteCustomer(item.customerId)
+            } catch (ex: Exception) {
+                throw ex
+            }
+        }.subscribeOn(Schedulers.io())
+                .observeOn(JavaFxScheduler.platform())
+                .subscribe { t1, t2 ->
+                    t1?.let {
+                        requestForCustomers()
+                    }
+                    t2?.let {
+                        print(it)
+                        it.message?.let { it1 -> warning(it1).show() }
+                    }
+                }
+    }
+
 }
 
 class CustomerViewModel : ItemViewModel<Customer>(Customer()) {
