@@ -4,12 +4,15 @@ import com.dashlabs.invoicemanagement.InvoiceGenerator
 import com.dashlabs.invoicemanagement.app.savePdf
 import com.dashlabs.invoicemanagement.databaseconnection.*
 import com.dashlabs.invoicemanagement.view.TransactionHistoryView
+import com.dashlabs.invoicemanagement.view.invoices.InvoiceViewModel
 import com.dashlabs.invoicemanagement.view.invoices.InvoicesController
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import io.reactivex.Single
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler
 import io.reactivex.schedulers.Schedulers
+import javafx.collections.FXCollections
+import javafx.collections.ObservableList
 import javafx.geometry.Insets
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonBar
@@ -22,6 +25,8 @@ import java.util.*
 
 class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCustomer) : View("${customerData.customerName} Details") {
     private var deductValue: Double = 0.0
+    private var newInvoiceValue: Double = 0.0
+    private var descriptionValue = "Old Balance Adjustment"
     private val invoicesController: InvoicesController by inject()
     private var balanceVbox: VBox? = null
 
@@ -49,7 +54,10 @@ class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCust
             }
             vbox {
                 hboxConstraints { margin = Insets(10.0) }
+                this.add(getCreateDummyInvoiceBox())
+
                 balanceVbox = this@vbox
+
             }
         }
 
@@ -88,50 +96,126 @@ class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCust
             }
 
             if (outstanding > 0) {
-                val balanceBox = vbox {
-                    tag = "balance"
-                    deductValue = outstanding
-
-                    label {
-                        text = "Total Amount due is $outstanding!"
-                        vboxConstraints { margin = Insets(10.0) }
-                    }
-
-                    label {
-                        text = "Please enter due amount to pay!"
-                        vboxConstraints { margin = Insets(10.0) }
-                    }
-
-                    hbox {
-                        textfield(outstanding.toString()) {
-                            hboxConstraints { margin = Insets(10.0) }
-                            this.filterInput {
-                                it.controlNewText.isDouble() && it.controlNewText.toDouble() <= outstanding
-                            }
-                        }.textProperty().addListener { observable, oldValue, newValue ->
-                            newValue.takeIf { !it.isNullOrEmpty() }?.let {
-                                deductValue = newValue.toDouble()
-                            } ?: kotlin.run {
-                                deductValue = 0.0
-                            }
-                        }
-
-                        button {
-                            hboxConstraints { margin = Insets(10.0) }
-                            text = "Pay Now!"
-                            setOnMouseClicked {
-                                if (deductValue > 0) {
-                                    performBalanceReduction(customerData, deductValue)
-                                }
-                            }
-                        }
-                    }
-                }
+                val balanceBox = getBalanceBox(outstanding)
                 this@CustomerDetailView.balanceBox = balanceBox
                 balanceVbox?.add(balanceBox)
             }
+
+
         } catch (ex: Exception) {
             ex.printStackTrace()
+        }
+    }
+
+    private fun getCreateDummyInvoiceBox(): VBox {
+        return vbox {
+            tag = "balance"
+
+            label {
+                text = "This will create an invoice with some amount!"
+                vboxConstraints { margin = Insets(10.0) }
+            }
+
+            label {
+                text = "Please enter due amount for old data!"
+                vboxConstraints { margin = Insets(10.0) }
+            }
+
+            hbox {
+                textfield(descriptionValue) {
+                    hboxConstraints { margin = Insets(10.0) }
+                }.textProperty().addListener { observable, oldValue, newValue ->
+                    newValue.takeIf { !it.isNullOrEmpty() }?.let {
+                        descriptionValue = newValue
+                    } ?: kotlin.run {
+                        descriptionValue = ""
+                    }
+                }
+
+                textfield(newInvoiceValue.toString()) {
+                    hboxConstraints { margin = Insets(10.0) }
+                    this.filterInput {
+                        it.controlNewText.isDouble()
+                    }
+                }.textProperty().addListener { observable, oldValue, newValue ->
+                    newValue.takeIf { !it.isNullOrEmpty() }?.let {
+                        newInvoiceValue = newValue.toDouble()
+                    } ?: kotlin.run {
+                        newInvoiceValue = 0.0
+                    }
+                }
+
+                button {
+                    hboxConstraints { margin = Insets(10.0) }
+                    text = "Add as Invoice Now!"
+                    setOnMouseClicked {
+                        if (newInvoiceValue > 0) {
+                            val model = InvoiceViewModel()
+                            model.customerId.value = customerData.customerId
+                            model.customer.value = customerData
+                            model.leftoverAmount.value = newInvoiceValue
+                            model.payingAmount.value = 0
+                            model.totalPrice.value = newInvoiceValue
+                            model.productsList.value = generateProductWith(newInvoiceValue, descriptionValue)
+                            invoicesController.addInvoice(model)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun generateProductWith(newInvoiceValue: Double, description: String): ObservableList<InvoicesController.ProductsModel> {
+        val currentList = FXCollections.observableArrayList<InvoicesController.ProductsModel>()
+        val productsTable = ProductsTable()
+        productsTable.productName = description
+        productsTable.amount = newInvoiceValue
+        productsTable.dateCreated = System.currentTimeMillis()
+        productsTable.dateModified = System.currentTimeMillis()
+        val model = InvoicesController.ProductsModel(productsTable, "1", newInvoiceValue.toString(), newInvoiceValue)
+        currentList.add(model)
+        return currentList
+    }
+
+    private fun getBalanceBox(outstanding: Double): VBox {
+        return vbox {
+            tag = "balance"
+            deductValue = outstanding
+
+            label {
+                text = "Total Amount due is $outstanding!"
+                vboxConstraints { margin = Insets(10.0) }
+            }
+
+            label {
+                text = "Please enter due amount to pay!"
+                vboxConstraints { margin = Insets(10.0) }
+            }
+
+            hbox {
+                textfield(outstanding.toString()) {
+                    hboxConstraints { margin = Insets(10.0) }
+                    this.filterInput {
+                        it.controlNewText.isDouble() && it.controlNewText.toDouble() <= outstanding
+                    }
+                }.textProperty().addListener { observable, oldValue, newValue ->
+                    newValue.takeIf { !it.isNullOrEmpty() }?.let {
+                        deductValue = newValue.toDouble()
+                    } ?: kotlin.run {
+                        deductValue = 0.0
+                    }
+                }
+
+                button {
+                    hboxConstraints { margin = Insets(10.0) }
+                    text = "Pay Now!"
+                    setOnMouseClicked {
+                        if (deductValue > 0) {
+                            performBalanceReduction(customerData, deductValue)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -141,8 +225,8 @@ class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCust
                     .subscribeOn(Schedulers.io())
                     .observeOn(JavaFxScheduler.platform())
                     .subscribe { t1, t2 ->
-                alertUser(t1, selectedItem)
-            }
+                        alertUser(t1, selectedItem)
+                    }
         }
     }
 
@@ -150,7 +234,7 @@ class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCust
         alert(Alert.AlertType.CONFIRMATION, "Invoice Information",
                 "View invoice or Save It",
                 buttons = *arrayOf(ButtonType("Save", ButtonBar.ButtonData.BACK_PREVIOUS),
-                        ButtonType("Preview", ButtonBar.ButtonData.NEXT_FORWARD),ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE)), title = "Hey!") {
+                        ButtonType("Preview", ButtonBar.ButtonData.NEXT_FORWARD), ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE)), title = "Hey!") {
             when {
                 it.buttonData == ButtonBar.ButtonData.NEXT_FORWARD -> try {
                     Desktop.getDesktop().browse(t1.toURI())
