@@ -15,9 +15,8 @@ import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
 import javafx.scene.control.TableView
 import javafx.scene.input.KeyCode
-import org.fxmisc.wellbehaved.event.InputMap.sequence
-import org.fxmisc.wellbehaved.event.Nodes
 import tornadofx.*
+import java.text.DecimalFormat
 
 
 class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustomerSelectedListener {
@@ -25,6 +24,7 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
     private val invoiceViewModel = InvoiceViewModel()
     private val invoicesController: InvoicesController by inject()
     private var productsTableView: TableView<InvoicesController.ProductsModel>? = null
+    private val df2 = DecimalFormat("#.##")
 
     override val root = vbox {
         hbox {
@@ -141,11 +141,24 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
                 this@InvoicesView.productsTableView = this
                 column("Product Name", InvoicesController.ProductsModel::productsTable).remainingWidth()
                 column("Quantity", InvoicesController.ProductsModel::quantity).remainingWidth().makeEditable().setOnEditCommit {
-                    if (it.newValue.toInt() != 0) {
+                    if (it.newValue.toInt() > 0) {
                         invoicesController.productsQuanityView[it.tablePosition.row].quantity = it.newValue
-                        invoicesController.productsQuanityView[it.tablePosition.row].totalAmount = it.newValue.toInt().times(invoicesController.productsQuanityView[it.tablePosition.row].baseAmount).toString()
-                        updateTotalAmount()
+                        getAmountFor(invoicesController.productsQuanityView[it.tablePosition.row])?.let { newPrice ->
+                            invoicesController.productsQuanityView[it.tablePosition.row].totalAmount = newPrice.toString()
+                        }
                     }
+                    updateTotalAmount()
+                    refresh()
+                }
+                column("Discount %", InvoicesController.ProductsModel::discount).remainingWidth().makeEditable().setOnEditCommit {
+                    if (it.newValue.toDouble() in 0.0..100.0) {
+                        invoicesController.productsQuanityView[it.tablePosition.row].discount = it.newValue
+                        getAmountFor(invoicesController.productsQuanityView[it.tablePosition.row])?.let { newPrice ->
+                            invoicesController.productsQuanityView[it.tablePosition.row].totalAmount = newPrice.toString()
+
+                        }
+                    }
+                    updateTotalAmount()
                     refresh()
                 }
                 column("Amount", InvoicesController.ProductsModel::totalAmount).remainingWidth()
@@ -160,6 +173,7 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
                                         buttons = *arrayOf(ButtonType.OK, ButtonType.CANCEL), owner = currentWindow, title = "Hey!") {
                                     if (it == ButtonType.OK) {
                                         invoicesController.productsQuanityView.removeAt(position)
+                                        updateTotalAmount()
                                         refresh()
                                     }
                                 }
@@ -172,6 +186,18 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
                 }
             }
         }
+    }
+
+    private fun getAmountFor(productsModel: InvoicesController.ProductsModel): Double? {
+        val baseAmount = productsModel.baseAmount
+        val calculatedDiscount: Double
+        calculatedDiscount = when (productsModel.discount) {
+            0.0 -> 0.0
+            else -> (productsModel.discount.times(baseAmount.times(productsModel.quantity.toInt()))).div(100)
+        }
+        var newPrice = baseAmount.times(productsModel.quantity.toInt()).minus(calculatedDiscount)
+        newPrice = df2.format(newPrice).toDouble()
+        return newPrice
     }
 
     override fun onCustomerSelected(customersTable: CustomersTable.MeaningfulCustomer) {

@@ -10,12 +10,16 @@ import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
 import java.io.File
 import java.io.FileOutputStream
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
 object InvoiceGenerator {
 
-    fun makePDF(fileName: File, data: InvoiceTable.MeaningfulInvoice, listproducts: MutableList<Pair<ProductsTable, Int>>): Boolean {
+    private val df2 = DecimalFormat("#.##")
+
+
+    fun makePDF(fileName: File, data: InvoiceTable.MeaningfulInvoice, listproducts: MutableList<Triple<ProductsTable, Double, Int>>): Boolean {
         val curDate = Date()
         val format = SimpleDateFormat("dd-MMM-yyy")
         val date = format.format(curDate)
@@ -54,25 +58,41 @@ object InvoiceGenerator {
             val contact = Paragraph(customer?.toString())
             contact.setIndentationLeft(20F)
 
-            val billTable = PdfPTable(5)
+            val billTable = PdfPTable(6)
             billTable.setWidthPercentage(100F)
-            billTable.setWidths(floatArrayOf(1f, 2f, 2f, 1f, 2f))
+            billTable.setWidths(floatArrayOf(1f, 2f, 2f, 2f, 1f, 2f))
             billTable.setSpacingBefore(30.0f)
             billTable.addCell(getBillHeaderCell("Index"))
             billTable.addCell(getBillHeaderCell("Item"))
             billTable.addCell(getBillHeaderCell("Unit Price"))
             billTable.addCell(getBillHeaderCell("Qty"))
+            billTable.addCell(getBillHeaderCell("Discount"))
             billTable.addCell(getBillHeaderCell("Amount"))
+
+            fun getAmountFor(baseAmount: Double, discount: Double, quantity: Int): Double? {
+                val calculatedDiscount: Double = when (discount) {
+                    0.0 -> 0.0
+                    else -> (discount.times(baseAmount.times(quantity))).div(100)
+                }
+                var newPrice = baseAmount.times(quantity).minus(calculatedDiscount)
+                newPrice = df2.format(newPrice).toDouble()
+                return newPrice
+            }
+
 
             for (i in listproducts.indices) {
                 billTable.addCell(getBillRowCell((i + 1).toString()))
                 billTable.addCell(getBillRowCell(listproducts[i].first.productName))
                 billTable.addCell(getBillRowCell(listproducts[i].first.amount.toString()))
+                billTable.addCell(getBillRowCell(listproducts[i].third.toString()))
                 billTable.addCell(getBillRowCell(listproducts[i].second.toString()))
-                billTable.addCell(getBillRowCell(listproducts[i].first.amount.times(listproducts[i].second).toString()))
+                billTable.addCell(getBillRowCell(getAmountFor(listproducts[i].first.amount,
+                        listproducts[i].second,
+                        listproducts[i].third).toString()))
             }
             for (j in 0 until 15 - listproducts.size) {
                 billTable.addCell(getBillRowCell(" "))
+                billTable.addCell(getBillRowCell(""))
                 billTable.addCell(getBillRowCell(""))
                 billTable.addCell(getBillRowCell(""))
                 billTable.addCell(getBillRowCell(""))

@@ -248,14 +248,26 @@ class CustomerDetailView(private val customerData: CustomersTable.MeaningfulCust
 
     private fun generateInvoice(selectedItem: InvoiceTable.MeaningfulInvoice): Single<File> {
         return Single.fromCallable {
-            val list = Gson().fromJson<ArrayList<Pair<ProductsTable, Int>>>(
-                    selectedItem.productsPurchased,
-                    object : TypeToken<ArrayList<Pair<ProductsTable, Int>>>() {}.type)
-            val file = File("~/invoicedatabase", "temp.pdf")
-            file.delete()
-            file.createNewFile()
-            InvoiceGenerator.makePDF(file, selectedItem, list.map { Pair(it.first, it.second) }.toMutableList())
-            file
+            if (selectedItem.productsPurchased.contains("\"third\"")) {
+                val list = Gson().fromJson<ArrayList<Triple<ProductsTable, Double, Int>>>(
+                        selectedItem.productsPurchased,
+                        object : TypeToken<ArrayList<Triple<ProductsTable, Double, Int>>>() {}.type)
+                val file = File("~/invoicedatabase", "temp.pdf")
+                file.delete()
+                file.createNewFile()
+                InvoiceGenerator.makePDF(file, selectedItem, list.map { Triple(it.first, it.second, it.third) }.toMutableList())
+                file
+            } else {
+                val list = Gson().fromJson<ArrayList<Pair<ProductsTable, Int>>>(
+                        selectedItem.productsPurchased,
+                        object : TypeToken<ArrayList<Pair<ProductsTable, Int>>>() {}.type)
+                val file = File("~/invoicedatabase", "temp.pdf")
+                file.delete()
+                file.createNewFile()
+                InvoiceGenerator.makePDF(file, selectedItem, list.map { Triple(it.first, 0.0, it.second) }.toMutableList())
+                file
+            }
+
         }
     }
 

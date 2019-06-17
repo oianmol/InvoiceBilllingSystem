@@ -9,6 +9,7 @@ import com.google.gson.Gson
 import com.j256.ormlite.dao.Dao
 import com.j256.ormlite.dao.DaoManager
 import com.j256.ormlite.jdbc.JdbcConnectionSource
+import com.j256.ormlite.support.DatabaseConnection.DEFAULT_RESULT_FLAGS
 import com.j256.ormlite.table.TableUtils
 import java.io.File
 import java.time.LocalDateTime
@@ -33,10 +34,18 @@ object Database {
         connectionSource = getDatabaseConnection()
 
         TableUtils.createTableIfNotExists(connectionSource, AdminTable::class.java)
+        TableUtils.createTableIfNotExists(connectionSource, TransactionTable::class.java)
         TableUtils.createTableIfNotExists(connectionSource, ProductsTable::class.java)
         TableUtils.createTableIfNotExists(connectionSource, CustomersTable::class.java)
         TableUtils.createTableIfNotExists(connectionSource, InvoiceTable::class.java)
-        TableUtils.createTableIfNotExists(connectionSource, TransactionTable::class.java)
+
+        try {
+            connectionSource.readOnlyConnection.executeStatement("ALTER TABLE products ADD deleted INT default 0", DEFAULT_RESULT_FLAGS)
+            connectionSource.readOnlyConnection.executeStatement("ALTER TABLE customers ADD deleted INT default 0", DEFAULT_RESULT_FLAGS)
+            connectionSource.readOnlyConnection.executeStatement("ALTER TABLE invoices ADD deleted INT default 0", DEFAULT_RESULT_FLAGS)
+        } catch (ex: Exception) {
+
+        }
 
         // instantiate the DAO to handle Account with String id
         accountDao = DaoManager.createDao(connectionSource, AdminTable::class.java)
@@ -125,10 +134,6 @@ object Database {
 
     }
 
-    fun deleteProduct(productId: ProductsTable): Int? {
-        return productsDao?.delete(productId)
-    }
-
     fun createTransaction(transactionTable: TransactionTable): TransactionTable? {
         val id = transactionsDao?.create(transactionTable)
         connectionSource?.close()
@@ -193,17 +198,17 @@ object Database {
 
     fun listProducts(search: String = ""): List<ProductsTable>? {
         return if (search.isEmpty()) {
-            productsDao?.queryForAll()
+            productsDao?.queryBuilder()?.where()?.like(ProductsTable::deleted.name, false)?.query()
         } else {
-            productsDao?.queryBuilder()?.where()?.like(ProductsTable::productName.name, "%$search%")?.query()
+            productsDao?.queryBuilder()?.where()?.like(ProductsTable::productName.name, "%$search%")?.and()?.like(ProductsTable::deleted.name, false)?.query()
         }
     }
 
     fun listCustomers(search: String = ""): List<CustomersTable>? {
         return if (search.isEmpty()) {
-            customerDao?.queryForAll()
+            customerDao?.queryBuilder()?.where()?.like(CustomersTable::deleted.name, false)?.query()
         } else {
-            customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerName.name, "%$search%")?.query()
+            customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerName.name, "%$search%")?.and()?.like(CustomersTable::deleted.name, false)?.query()
         }
     }
 
@@ -224,7 +229,7 @@ object Database {
     }
 
     fun listInvoices(): List<InvoiceTable.MeaningfulInvoice>? {
-        val invoices = invoicesDao?.queryForAll()
+        val invoices = invoicesDao?.queryBuilder()?.where()?.like(InvoiceTable::deleted.name, false)?.query()
         return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }?.filterNotNull()
     }
 
@@ -236,17 +241,17 @@ object Database {
     }
 
     fun listInvoices(customerId: Long): List<InvoiceTable.MeaningfulInvoice>? {
-        val invoices = invoicesDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()
+        val invoices = invoicesDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.and()?.like(InvoiceTable::deleted.name, false)?.query()
         return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }?.filterNotNull()
     }
 
     fun listInvoicesSimple(customerId: Long): List<InvoiceTable>? {
-        val invoices = invoicesDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()
+        val invoices = invoicesDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.and()?.like(InvoiceTable::deleted.name, false)?.query()
         return invoices?.sortedByDescending { it.dateModified }
     }
 
     fun listInvoices(startTime: LocalDateTime, endTime: LocalDateTime): List<InvoiceTable.MeaningfulInvoice>? {
-        val invoices = invoicesDao?.queryBuilder()?.where()?.between(InvoiceTable::dateModified.name, startTime.toEpochSecond(OffsetDateTime.now().offset).times(1000), endTime.toEpochSecond(OffsetDateTime.now().offset).times(1000))?.query()
+        val invoices = invoicesDao?.queryBuilder()?.where()?.like(InvoiceTable::deleted.name, false)?.and()?.between(InvoiceTable::dateModified.name, startTime.toEpochSecond(OffsetDateTime.now().offset).times(1000), endTime.toEpochSecond(OffsetDateTime.now().offset).times(1000))?.query()
         return invoices?.sortedByDescending { it.dateModified }?.map { it.asMeaningfulInvoice() }?.filterNotNull()
     }
 
@@ -263,7 +268,7 @@ object Database {
             }
         }
 
-        invoiceTable.productsPurchased = Gson().toJson(invoice.productsList.map { Pair(it.productsTable, it.quantity.toInt()) }.toMutableList())
+        invoiceTable.productsPurchased = Gson().toJson(invoice.productsList.map { Triple(it.productsTable, it.discount, it.quantity.toInt()) }.toMutableList())
         // persist the account object to the database
         val id = invoicesDao?.create(invoiceTable)
         connectionSource.close()
@@ -280,7 +285,11 @@ object Database {
     }
 
     fun getCustomer(customerId: Long): CustomersTable? {
-        return customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.query()?.firstOrNull()
+        return customerDao?.queryBuilder()?.where()
+                ?.like(CustomersTable::customerId.name, customerId)
+                ?.and()
+                ?.like(CustomersTable::deleted.name, false)?.query()
+                ?.firstOrNull()
     }
 
 
@@ -325,7 +334,26 @@ object Database {
 
     fun deleteCustomer(customerId: Long): Boolean {
         customerDao?.queryBuilder()?.where()?.like(CustomersTable::customerId.name, customerId)?.queryForFirst()?.let {
-            customerDao?.delete(it)
+            customerDao?.update(it.apply {
+                this.deleted = true
+            })
+            return true
+        }
+        return false
+    }
+
+    fun deleteProduct(productId: ProductsTable): Int? {
+        productsDao?.update(productId.apply {
+            this.deleted = true
+        })
+        return 0
+    }
+
+    fun deleteInvoice(invoiceId: Long): Boolean {
+        invoicesDao?.queryBuilder()?.where()?.like(InvoiceTable::invoiceId.name, invoiceId)?.queryForFirst()?.let {
+            invoicesDao?.update(it.apply {
+                this.deleted = true
+            })
             return true
         }
         return false

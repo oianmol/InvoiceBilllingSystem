@@ -1,14 +1,11 @@
 package com.dashlabs.invoicemanagement.view.invoices
 
 import com.dashlabs.invoicemanagement.InvoiceGenerator
-import com.dashlabs.invoicemanagement.State
-import com.dashlabs.invoicemanagement.StateDistrict
 import com.dashlabs.invoicemanagement.app.savePdf
 import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
+import com.dashlabs.invoicemanagement.databaseconnection.Database
 import com.dashlabs.invoicemanagement.databaseconnection.InvoiceTable
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
-import com.dashlabs.invoicemanagement.view.customers.Customer
-import com.dashlabs.invoicemanagement.view.customers.CustomerDetailView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import io.reactivex.Single
@@ -17,13 +14,13 @@ import io.reactivex.schedulers.Schedulers
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.control.*
+import javafx.scene.input.KeyCode
 import tornadofx.*
 import java.awt.Desktop
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
 import java.util.*
-import javax.json.Json
 
 class SearchInvoiceView : View("Search Invoices") {
     private var datePicker: DatePicker? = null
@@ -76,6 +73,24 @@ class SearchInvoiceView : View("Search Invoices") {
             onDoubleClick {
                 showInvoiceDetails(invoicesController.invoicesListObserver.value[this.selectedCell!!.row])
             }
+            setOnKeyPressed {
+                this.selectedItem?.let { item ->
+                    when (it.code) {
+                        KeyCode.BACK_SPACE, KeyCode.DELETE -> {
+                            alert(Alert.AlertType.CONFIRMATION, "Delete Invoice with outstanding amounting ${item.outstandingAmount} ?",
+                                    "Remove invoice for ${item.customerName} ?",
+                                    buttons = *arrayOf(ButtonType.YES, ButtonType.CANCEL), owner = currentWindow, title = "Hey!") {
+                                if (it == ButtonType.YES) {
+                                    invoicesController.deleteInvoice(item)
+                                }
+                            }
+                        }
+                        else -> {
+
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -83,12 +98,25 @@ class SearchInvoiceView : View("Search Invoices") {
     private fun showInvoiceDetails(selectedItem: InvoiceTable.MeaningfulInvoice?) {
         selectedItem?.let {
             Single.fromCallable {
-                val list = Gson().fromJson<ArrayList<Pair<ProductsTable, Int>>>(selectedItem.productsPurchased, object : TypeToken<ArrayList<Pair<ProductsTable, Int>>>() {}.type)
-                val file = File("~/invoicedatabase", "temp.pdf")
-                file.delete()
-                file.createNewFile()
-                InvoiceGenerator.makePDF(file, selectedItem, list.map { Pair(it.first, it.second) }.toMutableList())
-                file
+                if (selectedItem.productsPurchased.contains("\"third\"")) {
+                    val list = Gson().fromJson<ArrayList<Triple<ProductsTable, Double, Int>>>(
+                            selectedItem.productsPurchased,
+                            object : TypeToken<ArrayList<Triple<ProductsTable, Double, Int>>>() {}.type)
+                    val file = File("~/invoicedatabase", "temp.pdf")
+                    file.delete()
+                    file.createNewFile()
+                    InvoiceGenerator.makePDF(file, selectedItem, list.map { Triple(it.first, it.second, it.third) }.toMutableList())
+                    file
+                } else {
+                    val list = Gson().fromJson<ArrayList<Pair<ProductsTable, Int>>>(
+                            selectedItem.productsPurchased,
+                            object : TypeToken<ArrayList<Pair<ProductsTable, Int>>>() {}.type)
+                    val file = File("~/invoicedatabase", "temp.pdf")
+                    file.delete()
+                    file.createNewFile()
+                    InvoiceGenerator.makePDF(file, selectedItem, list.map { Triple(it.first, 0.0, it.second) }.toMutableList())
+                    file
+                }
             }.subscribeOn(Schedulers.io()).observeOn(JavaFxScheduler.platform()).subscribe { t1, t2 ->
                 t1?.let {
                     alert(Alert.AlertType.CONFIRMATION, "Invoice Information",

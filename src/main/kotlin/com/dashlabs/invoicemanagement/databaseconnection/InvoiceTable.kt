@@ -29,6 +29,9 @@ class InvoiceTable {
     @DatabaseField(canBeNull = false)
     var outstandingAmount: Double = 0.0
 
+    @DatabaseField(defaultValue = "false")
+    var deleted: Boolean = false
+
     override fun toString(): String {
         return "$customerId $invoiceId $productsPurchased $dateCreated $dateModified"
     }

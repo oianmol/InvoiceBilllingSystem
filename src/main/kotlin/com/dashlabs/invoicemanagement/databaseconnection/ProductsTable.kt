@@ -21,6 +21,9 @@ class ProductsTable {
     @DatabaseField(canBeNull = false)
     var amount: Double = 0.0
 
+    @DatabaseField(defaultValue = "false")
+    var deleted: Boolean = false
+
     override fun toString(): String {
         return "$productName"
     }

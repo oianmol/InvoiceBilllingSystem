@@ -27,6 +27,9 @@ class CustomersTable {
     @DatabaseField(canBeNull = false)
     var dateModified: Long = 0L
 
+    @DatabaseField(defaultValue = "false")
+    var deleted: Boolean = false
+
     override fun toString(): String {
         return getFormattedCustomer(this)
     }

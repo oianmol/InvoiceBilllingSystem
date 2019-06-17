@@ -10,7 +10,6 @@ import javafx.geometry.Pos
 import javafx.scene.Node
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
-import javafx.scene.control.TableView
 import javafx.scene.control.TextField
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyCombination
@@ -63,7 +62,7 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
         return vbox {
             onCustomerSelectedListener?.let {
 
-            }?:kotlin.run {
+            } ?: kotlin.run {
                 Platform.runLater {
                     this.minWidth = Screen.getPrimary().visualBounds.width.div(3)
                 }
@@ -81,10 +80,14 @@ class CustomersView(private val onCustomerSelectedListener: OnCustomerSelectedLi
 
                 onDoubleClick {
                     onCustomerSelectedListener?.let {
-                        it.onCustomerSelected(this.selectedItem!!)
-                        currentStage?.close()
+                        this.selectedItem?.let { customer ->
+                            it.onCustomerSelected(customer)
+                            currentStage?.close()
+                        }
                     } ?: kotlin.run {
-                        CustomerDetailView(this.selectedItem!!).openWindow()
+                        this.selectedItem?.let {
+                            CustomerDetailView(it).openWindow()
+                        }
                     }
                 }
 
