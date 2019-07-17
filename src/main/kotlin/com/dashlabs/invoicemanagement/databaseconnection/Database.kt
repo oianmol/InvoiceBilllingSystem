@@ -12,6 +12,7 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource
 import com.j256.ormlite.support.DatabaseConnection.DEFAULT_RESULT_FLAGS
 import com.j256.ormlite.table.TableUtils
 import java.io.File
+import java.text.DecimalFormat
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
@@ -155,7 +156,7 @@ object Database {
         productsTable.productName = product.name
         productsTable.dateCreated = System.currentTimeMillis()
         productsTable.dateModified = System.currentTimeMillis()
-        productsTable.amount = product.amount.toDouble()
+        productsTable.amount = product.amount.toDouble().twoDecimalFormatted()
         // persist the account object to the database
         val id = productsDao?.create(productsTable)
         connectionSource.close()
@@ -260,11 +261,11 @@ object Database {
         invoiceTable.customerId = invoice.customerId
         invoiceTable.dateCreated = System.currentTimeMillis()
         invoiceTable.dateModified = System.currentTimeMillis()
-        invoiceTable.amountTotal = invoice.productsPrice.toDouble()
+        invoiceTable.amountTotal = invoice.productsPrice.toDouble().twoDecimalFormatted()
 
         invoice.creditAmount?.let {
             if (it.toDouble() > 0) {
-                invoiceTable.outstandingAmount = invoice.creditAmount.toDouble()
+                invoiceTable.outstandingAmount = invoice.creditAmount.toDouble().twoDecimalFormatted()
             }
         }
 
@@ -297,7 +298,7 @@ object Database {
         var reductionValue = deductValue
 
         listInvoicesSimple(customer.customerId)?.let {
-            val total = it.map { it.outstandingAmount }.sum()
+            val total = it.map { it.outstandingAmount.twoDecimalFormatted() }.sum()
             if (total == deductValue) {
                 it.forEach {
                     it.outstandingAmount = 0.0
@@ -320,7 +321,7 @@ object Database {
                         }
                         // the deduction amount is greater than current invoice
                         // take the less out of reduction value
-                        val deductableAmount = Math.min(it.outstandingAmount, reductionValue)
+                        val deductableAmount = Math.min(it.outstandingAmount, reductionValue).twoDecimalFormatted()
                         // deduct it from current outstanding
                         it.outstandingAmount -= deductableAmount
                         reductionValue -= deductableAmount
@@ -359,4 +360,8 @@ object Database {
         return false
     }
 
+}
+
+fun Double.twoDecimalFormatted(): Double {
+    return String.format("%.2f", this).toDouble()
 }

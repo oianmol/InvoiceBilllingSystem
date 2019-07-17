@@ -3,6 +3,7 @@ package com.dashlabs.invoicemanagement
 import com.dashlabs.invoicemanagement.databaseconnection.Database
 import com.dashlabs.invoicemanagement.databaseconnection.InvoiceTable
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
+import com.dashlabs.invoicemanagement.databaseconnection.twoDecimalFormatted
 import com.itextpdf.text.*
 import com.itextpdf.text.pdf.FontSelector
 import com.itextpdf.text.pdf.PdfPCell
@@ -32,7 +33,7 @@ object InvoiceGenerator {
             val irdTable = PdfPTable(2)
             irdTable.addCell(getIRDCell("Quotation No"))
             irdTable.addCell(getIRDCell("Quotation Date"))
-            irdTable.addCell(getIRDCell(data.invoiceId.toString())) // pass invoice number
+            irdTable.addCell(getIRDCell(data.invoiceId)) // pass invoice number
             irdTable.addCell(getIRDCell(date)) // pass invoice date
 
             val irhTable = PdfPTable(3)
@@ -76,7 +77,7 @@ object InvoiceGenerator {
                 }
                 var newPrice = baseAmount.times(quantity).minus(calculatedDiscount)
                 newPrice = df2.format(newPrice).toDouble()
-                return newPrice
+                return newPrice.twoDecimalFormatted()
             }
 
 
@@ -85,7 +86,7 @@ object InvoiceGenerator {
                 billTable.addCell(getBillRowCell(listproducts[i].first.productName))
                 billTable.addCell(getBillRowCell(listproducts[i].first.amount.toString()))
                 billTable.addCell(getBillRowCell(listproducts[i].third.toString()))
-                billTable.addCell(getBillRowCell(listproducts[i].second.toString()))
+                billTable.addCell(getBillRowCell(listproducts[i].second.twoDecimalFormatted().toString()))
                 billTable.addCell(getBillRowCell(getAmountFor(listproducts[i].first.amount,
                         listproducts[i].second,
                         listproducts[i].third).toString()))
@@ -113,10 +114,10 @@ object InvoiceGenerator {
             val accounts = PdfPTable(2)
             accounts.widthPercentage = 100F
             accounts.addCell(getAccountsCell("Subtotal"))
-            accounts.addCell(getAccountsCellR(data.amountTotal.toString()))
+            accounts.addCell(getAccountsCellR(data.amountTotal.twoDecimalFormatted().toString()))
 
             accounts.addCell(getAccountsCell("Outstanding"))
-            accounts.addCell(getAccountsCellR(data.outstandingAmount.toString()))
+            accounts.addCell(getAccountsCellR(data.outstandingAmount.twoDecimalFormatted().toString()))
 
             val summaryR = PdfPCell(accounts)
             summaryR.colspan = 3

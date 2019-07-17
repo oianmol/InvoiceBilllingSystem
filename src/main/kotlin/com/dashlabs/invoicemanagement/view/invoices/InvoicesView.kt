@@ -2,6 +2,7 @@ package com.dashlabs.invoicemanagement.view.invoices
 
 import com.dashlabs.invoicemanagement.databaseconnection.CustomersTable
 import com.dashlabs.invoicemanagement.databaseconnection.ProductsTable
+import com.dashlabs.invoicemanagement.databaseconnection.twoDecimalFormatted
 import com.dashlabs.invoicemanagement.view.customers.CustomersView
 import com.dashlabs.invoicemanagement.view.customers.OnCustomerSelectedListener
 import com.dashlabs.invoicemanagement.view.customers.OnProductSelectedListener
@@ -152,7 +153,7 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
                 }
                 column("Discount %", InvoicesController.ProductsModel::discount).remainingWidth().makeEditable().setOnEditCommit {
                     if (it.newValue.toDouble() in 0.0..100.0) {
-                        invoicesController.productsQuanityView[it.tablePosition.row].discount = it.newValue
+                        invoicesController.productsQuanityView[it.tablePosition.row].discount = it.newValue.twoDecimalFormatted()
                         getAmountFor(invoicesController.productsQuanityView[it.tablePosition.row])?.let { newPrice ->
                             invoicesController.productsQuanityView[it.tablePosition.row].totalAmount = newPrice.toString()
 
