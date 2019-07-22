@@ -71,11 +71,7 @@ object InvoiceGenerator {
             billTable.addCell(getBillHeaderCell("Amount"))
 
             fun getAmountFor(baseAmount: Double, discount: Double, quantity: Int): Double? {
-                val calculatedDiscount: Double = when (discount) {
-                    0.0 -> 0.0
-                    else -> (discount.times(baseAmount.times(quantity))).div(100)
-                }
-                var newPrice = baseAmount.times(quantity).minus(calculatedDiscount)
+                var newPrice = baseAmount.times(quantity).minus(discount)
                 newPrice = df2.format(newPrice).toDouble()
                 return newPrice.twoDecimalFormatted()
             }

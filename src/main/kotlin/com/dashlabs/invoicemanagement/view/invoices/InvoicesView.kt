@@ -151,13 +151,10 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
                     updateTotalAmount()
                     refresh()
                 }
-                column("Discount %", InvoicesController.ProductsModel::discount).remainingWidth().makeEditable().setOnEditCommit {
-                    if (it.newValue.toDouble() in 0.0..100.0) {
-                        invoicesController.productsQuanityView[it.tablePosition.row].discount = it.newValue.twoDecimalFormatted()
-                        getAmountFor(invoicesController.productsQuanityView[it.tablePosition.row])?.let { newPrice ->
-                            invoicesController.productsQuanityView[it.tablePosition.row].totalAmount = newPrice.toString()
-
-                        }
+                column("Discount", InvoicesController.ProductsModel::discount).remainingWidth().makeEditable().setOnEditCommit {
+                    invoicesController.productsQuanityView[it.tablePosition.row].discount = it.newValue.twoDecimalFormatted()
+                    getAmountFor(invoicesController.productsQuanityView[it.tablePosition.row])?.let { newPrice ->
+                        invoicesController.productsQuanityView[it.tablePosition.row].totalAmount = newPrice.toString()
                     }
                     updateTotalAmount()
                     refresh()
@@ -191,12 +188,7 @@ class InvoicesView : View("Invoices View"), OnProductSelectedListener, OnCustome
 
     private fun getAmountFor(productsModel: InvoicesController.ProductsModel): Double? {
         val baseAmount = productsModel.baseAmount
-        val calculatedDiscount: Double
-        calculatedDiscount = when (productsModel.discount) {
-            0.0 -> 0.0
-            else -> (productsModel.discount.times(baseAmount.times(productsModel.quantity.toInt()))).div(100)
-        }
-        var newPrice = baseAmount.times(productsModel.quantity.toInt()).minus(calculatedDiscount)
+        var newPrice = baseAmount.times(productsModel.quantity.toInt()).minus(productsModel.discount)
         newPrice = df2.format(newPrice).toDouble()
         return newPrice
     }
